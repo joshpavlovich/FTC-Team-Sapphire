@@ -1,29 +1,13 @@
-/**
- * Top-level build file for ftc_app project.
- *
- * It is extraordinarily rare that you will ever need to edit this file.
- */
+plugins {
 
-buildscript {
-    repositories {
-        mavenCentral()
-        google()
-    }
-    dependencies {
-        // Note for FTC Teams: Do not modify this yourself.
-        classpath 'com.android.tools.build:gradle:7.2.0'
-    }
-}
+    /**
+     * Use `apply false` in the top-level build.gradle file to add a Gradle
+     * plugin as a build dependency but not apply it to the current (root)
+     * project. Don't use `apply false` in sub-projects. For more information,
+     * see Applying external plugins with same version to subprojects.
+     */
 
-// This is now required because aapt2 has to be downloaded from the
-// google() repository beginning with version 3.2 of the Android Gradle Plugin
-allprojects {
-    repositories {
-        mavenCentral()
-        google()
-    }
-}
-
-repositories {
-    mavenCentral()
+    id 'com.android.application' version '8.7.0' apply false
+    id 'com.android.library' version '8.7.0' apply false
+    id 'org.jetbrains.kotlin.android' version '2.0.20' apply false
 }
