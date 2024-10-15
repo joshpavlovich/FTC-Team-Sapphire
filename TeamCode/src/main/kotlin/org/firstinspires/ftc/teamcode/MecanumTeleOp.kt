@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple
 import kotlin.math.abs
 import kotlin.math.max
 
-private const val DRIVE_SPEED: Double = 0.3
+private const val DRIVE_SPEED: Double = 0.5
 
 private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
 private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
