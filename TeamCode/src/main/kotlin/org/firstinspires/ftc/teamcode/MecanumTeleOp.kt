@@ -9,11 +9,6 @@ import kotlin.math.max
 
 private const val DRIVE_SPEED: Double = 0.5
 
-private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
-private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
-private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
-private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
-
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
 private const val TELEMETRY_KEY_TRIGGER = "Trigger"
@@ -25,16 +20,16 @@ class MecanumTeleOp : LinearOpMode() {
     // DECLARE OUR MOTORS
     // MAKE SURE YOUR ID'S MATCH YOUR CONFIGURATION
     private val frontLeftMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_FRONT_LEFT_MOTOR)
+        hardwareMap.dcMotor.get(Constants.HARDWARE_MAP_FRONT_LEFT_MOTOR)
     }
     private val backLeftMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_BACK_LEFT_MOTOR)
+        hardwareMap.dcMotor.get(Constants.HARDWARE_MAP_BACK_LEFT_MOTOR)
     }
     private val frontRightMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_FRONT_RIGHT_MOTOR)
+        hardwareMap.dcMotor.get(Constants.HARDWARE_MAP_FRONT_RIGHT_MOTOR)
     }
     private val backRightMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_BACK_RIGHT_MOTOR)
+        hardwareMap.dcMotor.get(Constants.HARDWARE_MAP_BACK_RIGHT_MOTOR)
     }
 
     override fun runOpMode() {
