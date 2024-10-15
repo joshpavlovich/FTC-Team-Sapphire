@@ -14,6 +14,8 @@ private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
 private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
 private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 
+private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
+
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
 private const val TELEMETRY_KEY_TRIGGER = "Trigger"
@@ -35,6 +37,10 @@ class MecanumTeleOp : LinearOpMode() {
     }
     private val backRightMotor: DcMotor by lazy {
         hardwareMap.dcMotor.get(HARDWARE_MAP_BACK_RIGHT_MOTOR)
+    }
+
+    private val slideMotor: DcMotor by lazy {
+        hardwareMap.dcMotor.get(HARDWARE_MAP_SLIDE_MOTOR)
     }
 
     override fun runOpMode() {
