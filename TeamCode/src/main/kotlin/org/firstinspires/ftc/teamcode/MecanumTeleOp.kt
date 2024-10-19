@@ -3,7 +3,9 @@ package org.firstinspires.ftc.teamcode
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -13,8 +15,12 @@ private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
 private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
 private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
 private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
-
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
+
+private const val SLIDE_LIFT_TICKS_PER_MM = (111132.0 / 289.0) / 120.0
+private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
+private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
+private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 1289.12 * SLIDE_LIFT_TICKS_PER_MM
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -39,9 +45,11 @@ class MecanumTeleOp : LinearOpMode() {
         hardwareMap.dcMotor.get(HARDWARE_MAP_BACK_RIGHT_MOTOR)
     }
 
-    private val slideMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_SLIDE_MOTOR)
+    private val slideMotor: DcMotorEx by lazy {
+        hardwareMap.dcMotor.get(HARDWARE_MAP_SLIDE_MOTOR) as DcMotorEx
     }
+
+    private var slideLiftPosition: Double = SLIDE_LIFT_COLLAPSED
 
     override fun runOpMode() {
         // Reverse the right side motors. This may be wrong for your setup.
@@ -58,6 +66,13 @@ class MecanumTeleOp : LinearOpMode() {
         frontRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         backLeftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         backRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+
+        // Initialize the slide motor to zero
+        slideMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        slideMotor.direction = DcMotorSimple.Direction.REVERSE
+        slideMotor.targetPosition = 0
+        slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
+        slideMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
 
         /* Send telemetry message to signify robot waiting */
         telemetry.addLine("Robot Ready")
@@ -96,6 +111,34 @@ class MecanumTeleOp : LinearOpMode() {
             backRightMotor.power = backRightPower * maxPower
             // END SETUP MECANUM DRIVETRAIN MOTORS
 
+            // START SET SLIDE MOTOR MODE AND POWER
+            if (gamepad1.y) {
+                slideLiftPosition += 2800 //* cycletime
+            } else if (gamepad1.a) {
+                slideLiftPosition -= 2800 //* cycletime
+            }
+
+            // HERE WE CHECK TO SEE IF THE LIFT IS TRYING TO GO HIGHER THAN
+            // THE MAXIMUM EXTENSION. IF IT IS, WE SET THE VARIABLE TO THE MAX.
+            if (slideLiftPosition > SLIDE_LIFT_SCORING_IN_HIGH_BASKET) {
+                slideLiftPosition = SLIDE_LIFT_SCORING_IN_HIGH_BASKET
+            }
+            //S AME AS ABOVE, WE SEE IF THE LIFT IS TRYING TO GO BELOW 0,
+            // AND IF IT IS, WE SET IT TO 0.
+            if (slideLiftPosition < 0) {
+                slideLiftPosition = 0.0
+            }
+
+            extendVerticalSlide(slideLiftPosition.toInt())
+            // END SET SLIDE MOTOR MODE AND POWER
+
+            telemetry.addData("Slide lift position", slideLiftPosition)
+            telemetry.addData("Slide target position", slideMotor.targetPosition)
+            telemetry.addData("Slide current position", slideMotor.currentPosition)
+            telemetry.addData("slideMotor current:", slideMotor.getCurrent(CurrentUnit.AMPS))
+
+            // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
+
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.addData(TELEMETRY_KEY_ROTATIONS, frontLeftMotor.currentPosition)
             telemetry.addData(TELEMETRY_KEY_SPEED, frontLeftMotor.power)
@@ -103,5 +146,14 @@ class MecanumTeleOp : LinearOpMode() {
             telemetry.addData(TELEMETRY_KEY_Y_VALUE, leftStickY)
             telemetry.update()
         }
+
     }
+
+    fun extendVerticalSlide(verticalSlideExtendPos: Int) {
+        slideMotor.targetPosition = verticalSlideExtendPos // the position you want the slides to reach
+        slideMotor.targetPositionTolerance = 1 // set accuracy to 1 tick
+        slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
+        slideMotor.power = 1.0 // raise at some power
+    }
+
 }
