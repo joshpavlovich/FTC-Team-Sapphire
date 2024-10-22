@@ -146,14 +146,13 @@ class MecanumTeleOp : LinearOpMode() {
             telemetry.addData(TELEMETRY_KEY_Y_VALUE, leftStickY)
             telemetry.update()
         }
-
     }
 
     fun extendVerticalSlide(verticalSlideExtendPos: Int) {
         slideMotor.targetPosition = verticalSlideExtendPos // the position you want the slides to reach
         slideMotor.targetPositionTolerance = 1 // set accuracy to 1 tick
+        slideMotor.velocity = 2100.0
         slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
-        slideMotor.power = 1.0 // raise at some power
     }
 
 }
