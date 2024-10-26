@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.math.abs
 import kotlin.math.max
@@ -16,11 +17,16 @@ private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
 private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
 private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
+private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
 
 private const val SLIDE_LIFT_TICKS_PER_MM = (111132.0 / 289.0) / 120.0
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 1289.12 * SLIDE_LIFT_TICKS_PER_MM
+
+private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.9
+private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.0
+private const val INTAKE_SLIDE_SERVO_POSITION_INTERVAL = 0.010
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -50,6 +56,11 @@ class MecanumTeleOp : LinearOpMode() {
     }
 
     private var slideLiftPosition: Double = SLIDE_LIFT_COLLAPSED
+
+    private val intakeSlideServo: Servo by lazy {
+        hardwareMap.servo.get(HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR)
+    }
+    private var intakeSlideServoPosition: Double = INTAKE_SLIDE_SERVO_START_POSITION
 
     override fun runOpMode() {
         // Reverse the right side motors. This may be wrong for your setup.
@@ -136,8 +147,19 @@ class MecanumTeleOp : LinearOpMode() {
             telemetry.addData("Slide target position", slideMotor.targetPosition)
             telemetry.addData("Slide current position", slideMotor.currentPosition)
             telemetry.addData("slideMotor current:", slideMotor.getCurrent(CurrentUnit.AMPS))
-
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
+
+            // START SET INTAKE SLIDE SERVO MOTOR POSITION
+            if (gamepad1.dpad_down && intakeSlideServoPosition > INTAKE_SLIDE_SERVO_END_POSITION) {
+                intakeSlideServoPosition -= INTAKE_SLIDE_SERVO_POSITION_INTERVAL
+            } else if (gamepad1.dpad_up && intakeSlideServoPosition < INTAKE_SLIDE_SERVO_START_POSITION) {
+                intakeSlideServoPosition += INTAKE_SLIDE_SERVO_POSITION_INTERVAL
+            }
+
+            intakeSlideServo.position = intakeSlideServoPosition
+
+            telemetry.addData("Intake Slide Servo Position", intakeSlideServoPosition)
+            // END SET INTAKE SLIDE SERVO MOTOR POSITION
 
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.addData(TELEMETRY_KEY_ROTATIONS, frontLeftMotor.currentPosition)
