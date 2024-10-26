@@ -18,16 +18,20 @@ private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
 private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
+private const val HARDWARE_MAP_INTAKE_ARM_SERVO_MOTOR = "intakeArmServo"
 
 private const val SLIDE_LIFT_TICKS_PER_MM = (111132.0 / 289.0) / 120.0
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 1289.12 * SLIDE_LIFT_TICKS_PER_MM
 
-private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.9
-private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.0
-private const val INTAKE_SLIDE_SERVO_POSITION_INTERVAL = 0.010
+private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.035
+private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
+private const val INTAKE_SLIDE_SERVO_POSITION_INTERVAL = 0.05
 
+private const val INTAKE_ARM_SERVO_START_POSITION = 0.0
+private const val INTAKE_ARM_SERVO_END_POSITION = 0.25
+private const val INTAKE_ARM_SERVO_POSITION_INTERVAL = 0.05
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
 private const val TELEMETRY_KEY_TRIGGER = "Trigger"
@@ -60,7 +64,11 @@ class MecanumTeleOp : LinearOpMode() {
     private val intakeSlideServo: Servo by lazy {
         hardwareMap.servo.get(HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR)
     }
-    private var intakeSlideServoPosition: Double = INTAKE_SLIDE_SERVO_START_POSITION
+
+    private val intakeArmServo: Servo by lazy {
+        hardwareMap.servo.get(HARDWARE_MAP_INTAKE_ARM_SERVO_MOTOR)
+    }
+    private var intakeArmServoPosition: Double = INTAKE_ARM_SERVO_START_POSITION
 
     override fun runOpMode() {
         // Reverse the right side motors. This may be wrong for your setup.
@@ -84,6 +92,12 @@ class MecanumTeleOp : LinearOpMode() {
         slideMotor.targetPosition = 0
         slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         slideMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+
+
+        intakeArmServo.position = intakeArmServoPosition
+
+        intakeSlideServo.direction = Servo.Direction.REVERSE
+        intakeSlideServo.position = INTAKE_SLIDE_SERVO_START_POSITION
 
         /* Send telemetry message to signify robot waiting */
         telemetry.addLine("Robot Ready")
@@ -150,16 +164,24 @@ class MecanumTeleOp : LinearOpMode() {
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
 
             // START SET INTAKE SLIDE SERVO MOTOR POSITION
-            if (gamepad1.dpad_down && intakeSlideServoPosition > INTAKE_SLIDE_SERVO_END_POSITION) {
-                intakeSlideServoPosition -= INTAKE_SLIDE_SERVO_POSITION_INTERVAL
-            } else if (gamepad1.dpad_up && intakeSlideServoPosition < INTAKE_SLIDE_SERVO_START_POSITION) {
-                intakeSlideServoPosition += INTAKE_SLIDE_SERVO_POSITION_INTERVAL
+            if (gamepad1.dpad_left) {
+                intakeSlideServo.position = INTAKE_SLIDE_SERVO_END_POSITION
+            } else if (gamepad1.dpad_right) {
+                intakeSlideServo.position = INTAKE_SLIDE_SERVO_START_POSITION
             }
 
-            intakeSlideServo.position = intakeSlideServoPosition
-
-            telemetry.addData("Intake Slide Servo Position", intakeSlideServoPosition)
+            telemetry.addData("Intake Slide Servo Position", intakeSlideServo.position)
             // END SET INTAKE SLIDE SERVO MOTOR POSITION
+
+            // START SET INTAKE ARM SERVO MOTOR POSITION
+            if (gamepad1.x) {
+                intakeArmServo.position = INTAKE_ARM_SERVO_START_POSITION
+            } else if (gamepad1.b) {
+                intakeArmServo.position = INTAKE_ARM_SERVO_END_POSITION
+            }
+
+            telemetry.addData("Intake Arm Servo Position", intakeArmServo.position)
+            // END SET INTAKE ARM SERVO MOTOR POSITION
 
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.addData(TELEMETRY_KEY_ROTATIONS, frontLeftMotor.currentPosition)
@@ -172,7 +194,7 @@ class MecanumTeleOp : LinearOpMode() {
 
     fun extendVerticalSlide(verticalSlideExtendPos: Int) {
         slideMotor.targetPosition = verticalSlideExtendPos // the position you want the slides to reach
-        slideMotor.targetPositionTolerance = 1 // set accuracy to 1 tick
+//        slideMotor.targetPositionTolerance = 1 // set accuracy to 1 tick
         slideMotor.velocity = 2100.0
         slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
     }
