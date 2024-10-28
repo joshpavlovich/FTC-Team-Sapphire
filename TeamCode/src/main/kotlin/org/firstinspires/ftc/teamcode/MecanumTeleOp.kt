@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
@@ -19,6 +20,7 @@ private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
 private const val HARDWARE_MAP_INTAKE_ARM_SERVO_MOTOR = "intakeArmServo"
+private const val HARDWARE_MAP_INTAKE_SERVO_MOTOR = "intakeServo"
 
 private const val SLIDE_LIFT_TICKS_PER_MM = (111132.0 / 289.0) / 120.0
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
@@ -30,7 +32,7 @@ private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 private const val INTAKE_SLIDE_SERVO_POSITION_INTERVAL = 0.05
 
 private const val INTAKE_ARM_SERVO_START_POSITION = 0.0
-private const val INTAKE_ARM_SERVO_END_POSITION = 0.25
+private const val INTAKE_ARM_SERVO_END_POSITION = 0.60
 private const val INTAKE_ARM_SERVO_POSITION_INTERVAL = 0.05
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -68,6 +70,11 @@ class MecanumTeleOp : LinearOpMode() {
     private val intakeArmServo: Servo by lazy {
         hardwareMap.servo.get(HARDWARE_MAP_INTAKE_ARM_SERVO_MOTOR)
     }
+
+    private val intakeServo: CRServo by lazy {
+        hardwareMap.crservo.get(HARDWARE_MAP_INTAKE_SERVO_MOTOR)
+    }
+
     private var intakeArmServoPosition: Double = INTAKE_ARM_SERVO_START_POSITION
 
     override fun runOpMode() {
@@ -93,6 +100,7 @@ class MecanumTeleOp : LinearOpMode() {
         slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         slideMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
 
+        intakeServo.power = 0.0
 
         intakeArmServo.position = intakeArmServoPosition
 
@@ -178,6 +186,12 @@ class MecanumTeleOp : LinearOpMode() {
                 intakeArmServo.position = INTAKE_ARM_SERVO_START_POSITION
             } else if (gamepad1.b) {
                 intakeArmServo.position = INTAKE_ARM_SERVO_END_POSITION
+            }
+
+            intakeServo.power = if (gamepad1.left_bumper) {
+                1.0
+            } else  {
+                0.0
             }
 
             telemetry.addData("Intake Arm Servo Position", intakeArmServo.position)
