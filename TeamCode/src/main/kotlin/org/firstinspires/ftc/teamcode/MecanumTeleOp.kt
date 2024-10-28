@@ -74,8 +74,8 @@ class MecanumTeleOp : LinearOpMode() {
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
         // reverse the left side instead.
-        frontRightMotor.direction = DcMotorSimple.Direction.REVERSE
-        backRightMotor.direction = DcMotorSimple.Direction.REVERSE
+        frontRightMotor.direction = DcMotorSimple.Direction.FORWARD
+        backRightMotor.direction = DcMotorSimple.Direction.FORWARD
 
         // Setting zeroPowerBehavior to BRAKE enables a "brake mode".
         // This causes the motor to slow down much faster when it is coasting.
@@ -110,8 +110,8 @@ class MecanumTeleOp : LinearOpMode() {
         while (opModeIsActive()) {
             // START SETUP MECANUM DRIVETRAIN MOTORS
             // Remember, Y stick value is reversed
-            val leftStickY: Double = gamepad1.left_stick_y.toDouble()
-            val leftStickX: Double = gamepad1.left_stick_x.toDouble()
+            val leftStickY: Double = -gamepad1.left_stick_y.toDouble()
+            val leftStickX: Double = gamepad1.left_stick_x.toDouble() * 1.1
             val rightStickX: Double = gamepad1.right_stick_x.toDouble()
 
             // Denominator is the largest motor power (absolute value) or 1
@@ -130,8 +130,8 @@ class MecanumTeleOp : LinearOpMode() {
                 DRIVE_SPEED + ((1 - DRIVE_SPEED) * gamepad1.left_trigger)
             }
 
-            frontLeftMotor.power = -frontLeftPower * maxPower
-            backLeftMotor.power = backLeftPower * maxPower
+            frontLeftMotor.power = frontLeftPower * maxPower
+            backLeftMotor.power = -backLeftPower * maxPower
             frontRightMotor.power = frontRightPower * maxPower
             backRightMotor.power = backRightPower * maxPower
             // END SETUP MECANUM DRIVETRAIN MOTORS
