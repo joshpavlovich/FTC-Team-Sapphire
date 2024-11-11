@@ -18,6 +18,7 @@ private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
 private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
 private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
+private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
 private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
 private const val HARDWARE_MAP_INTAKE_ARM_MOTOR = "intakeArmMotor"
 private const val HARDWARE_MAP_INTAKE_SERVO_MOTOR = "intakeServo"
@@ -26,6 +27,9 @@ private const val SLIDE_LIFT_TICKS_PER_MM = (111132.0 / 289.0) / 120.0
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 1289.12 * SLIDE_LIFT_TICKS_PER_MM
+
+private const val BUCKET_SERVO_START_POSITION = 0.0
+private const val BUCKET_SERVO_END_POSITION = 0.15
 
 private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.035
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
@@ -61,6 +65,10 @@ class MecanumTeleOp : LinearOpMode() {
         hardwareMap.dcMotor.get(HARDWARE_MAP_SLIDE_MOTOR) as DcMotorEx
     }
     private var slideLiftPosition: Double = SLIDE_LIFT_COLLAPSED
+
+    private val bucketServo: Servo by lazy {
+        hardwareMap.servo.get(HARDWARE_MAP_BUCKET_SERVO_MOTOR)
+    }
 
     private val intakeArmMotor: DcMotorEx by lazy {
         hardwareMap.dcMotor.get(HARDWARE_MAP_INTAKE_ARM_MOTOR) as DcMotorEx
@@ -107,6 +115,9 @@ class MecanumTeleOp : LinearOpMode() {
 
         intakeSlideServo.direction = Servo.Direction.REVERSE
         intakeSlideServo.position = INTAKE_SLIDE_SERVO_START_POSITION
+
+        bucketServo.direction = Servo.Direction.REVERSE
+        bucketServo.position = BUCKET_SERVO_START_POSITION
 
         /* Send telemetry message to signify robot waiting */
         telemetry.addLine("Robot Ready")
@@ -199,6 +210,16 @@ class MecanumTeleOp : LinearOpMode() {
             telemetry.addData("armMotor current:", intakeArmMotor.getCurrent(CurrentUnit.AMPS))
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
 
+            // START SET BUCKET SERVO MOTOR POSITION
+            if (gamepad1.x) {
+                bucketServo.position = BUCKET_SERVO_END_POSITION
+            } else if (gamepad1.b) {
+                bucketServo.position = BUCKET_SERVO_START_POSITION
+            }
+
+            telemetry.addData("Bucket Servo Position", bucketServo.position)
+            // END SET BUCKET SERVO MOTOR POSITION
+
             // START SET INTAKE SLIDE SERVO MOTOR POSITION
             if (gamepad1.dpad_left) {
                 intakeSlideServo.position = INTAKE_SLIDE_SERVO_END_POSITION
@@ -220,7 +241,6 @@ class MecanumTeleOp : LinearOpMode() {
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.addData(TELEMETRY_KEY_ROTATIONS, frontLeftMotor.currentPosition)
             telemetry.addData(TELEMETRY_KEY_SPEED, frontLeftMotor.power)
-            telemetry.addData(TELEMETRY_KEY_TRIGGER, gamepad1.right_trigger)
             telemetry.addData(TELEMETRY_KEY_Y_VALUE, leftStickY)
             telemetry.update()
         }
