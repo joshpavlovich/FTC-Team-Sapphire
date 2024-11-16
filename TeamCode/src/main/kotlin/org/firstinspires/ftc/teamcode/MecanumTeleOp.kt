@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import kotlin.math.abs
@@ -26,7 +27,7 @@ private const val HARDWARE_MAP_INTAKE_SERVO_MOTOR = "intakeServo"
 private const val SLIDE_LIFT_TICKS_PER_MM = (111132.0 / 289.0) / 120.0
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
-private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 1289.12 * SLIDE_LIFT_TICKS_PER_MM
+private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 1320.8 * SLIDE_LIFT_TICKS_PER_MM
 
 private const val BUCKET_SERVO_START_POSITION = 0.0
 private const val BUCKET_SERVO_END_POSITION = 0.15
@@ -35,8 +36,8 @@ private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.035
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 private const val INTAKE_SLIDE_SERVO_POSITION_INTERVAL = 0.05
 
-private const val INTAKE_ARM_START_POSITION = 25 * SLIDE_LIFT_TICKS_PER_MM
-private const val INTAKE_ARM_END_POSITION = 345 * SLIDE_LIFT_TICKS_PER_MM
+private const val INTAKE_ARM_START_POSITION = 0 * SLIDE_LIFT_TICKS_PER_MM
+private const val INTAKE_ARM_END_POSITION = 318 * SLIDE_LIFT_TICKS_PER_MM
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -87,8 +88,8 @@ class MecanumTeleOp : LinearOpMode() {
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
         // reverse the left side instead.
-        frontRightMotor.direction = DcMotorSimple.Direction.FORWARD
-        backRightMotor.direction = DcMotorSimple.Direction.FORWARD
+        frontRightMotor.direction = Direction.FORWARD
+        backRightMotor.direction = Direction.FORWARD
 
         // Setting zeroPowerBehavior to BRAKE enables a "brake mode".
         // This causes the motor to slow down much faster when it is coasting.
@@ -101,14 +102,14 @@ class MecanumTeleOp : LinearOpMode() {
 
         // Initialize the slide motor to zero
         slideMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        slideMotor.direction = DcMotorSimple.Direction.REVERSE
+        slideMotor.direction = Direction.REVERSE
         slideMotor.targetPosition = 0
         slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         slideMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
 
         // Initialize the arm motor to zero
         intakeArmMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        intakeArmMotor.direction = DcMotorSimple.Direction.FORWARD
+        intakeArmMotor.direction = Direction.FORWARD
         intakeArmMotor.targetPosition = intakeArmPosition.toInt()
         intakeArmMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         intakeArmMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -198,7 +199,7 @@ class MecanumTeleOp : LinearOpMode() {
             //SAME AS ABOVE, WE SEE IF THE LIFT IS TRYING TO GO BELOW 0,
             // AND IF IT IS, WE SET IT TO 0.
             if (intakeArmPosition < INTAKE_ARM_START_POSITION) {
-                intakeArmPosition =INTAKE_ARM_START_POSITION
+                intakeArmPosition = INTAKE_ARM_START_POSITION
             }
 
             intakeArmMotor.runToPosition(intakeArmPosition, 800.0)
@@ -231,7 +232,16 @@ class MecanumTeleOp : LinearOpMode() {
             // END SET INTAKE SLIDE SERVO MOTOR POSITION
 
             // START SET INTAKE SERVO POWER
-            intakeServo.power = if (gamepad1.left_bumper) {
+
+            if (gamepad1.left_bumper) {
+                intakeServo.direction = Direction.FORWARD
+            }
+
+            if (gamepad1.right_bumper) {
+                intakeServo.direction = Direction.REVERSE
+            }
+
+            intakeServo.power = if (gamepad1.left_bumper || gamepad1.right_bumper) {
                 1.0
             } else {
                 0.0
@@ -252,5 +262,4 @@ class MecanumTeleOp : LinearOpMode() {
         this.velocity = velocity
         this.mode = DcMotor.RunMode.RUN_TO_POSITION
     }
-
 }
