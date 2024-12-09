@@ -24,19 +24,19 @@ private const val HARDWARE_MAP_INTAKE_ARM_MOTOR = "intakeArmMotor"
 private const val HARDWARE_MAP_INTAKE_SERVO_MOTOR = "intakeServo"
 
 private const val SLIDE_LIFT_TICKS_PER_MM = (751.8) / 120
-private const val ARM_MOTOR_TICKS_PER_MM = (1992.6) / 110.0
+private const val ARM_MOTOR_TICKS_PER_MM = (1992.6) / 96.0 // IS THIS THE CORRECT DIAMETER???
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 976.0 * SLIDE_LIFT_TICKS_PER_MM
 
 private const val BUCKET_SERVO_START_POSITION = 0.0
-private const val BUCKET_SERVO_END_POSITION = 0.15
+private const val BUCKET_SERVO_END_POSITION = 0.35
 
-private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.035
+private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.015
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 
-private const val INTAKE_ARM_START_POSITION = 0.0 * ARM_MOTOR_TICKS_PER_MM
-private const val INTAKE_ARM_END_POSITION = 55 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_START_POSITION = .75 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_END_POSITION = 45.75 * ARM_MOTOR_TICKS_PER_MM
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -96,7 +96,7 @@ class MecanumTeleOp : LinearOpMode() {
         backLeftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         backRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
-        slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE)
+        slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE, true)
         intakeArmMotor.initializeForRunToPosition(INTAKE_ARM_START_POSITION, Direction.FORWARD)
 
         intakeSlideServo.direction = Servo.Direction.REVERSE
@@ -151,7 +151,7 @@ class MecanumTeleOp : LinearOpMode() {
 
             if (!slideMotor.isBusy && slideMotor.currentPosition <= 0) {
                 telemetry.addData("Slide not busy", slideMotor.currentPosition)
-                slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE)
+                slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE, true)
             }
             // END SET SLIDE MOTOR MODE AND POWER
 
@@ -160,22 +160,25 @@ class MecanumTeleOp : LinearOpMode() {
             telemetry.addData("Slide motor current", slideMotor.getCurrent(CurrentUnit.AMPS))
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
 
-            // START SET SLIDE MOTOR MODE AND POWER
+            // START SET ARM MOTOR MODE AND POWER
             if (gamepad1.y) {
                 intakeArmMotor.runToPosition(INTAKE_ARM_END_POSITION, 800.0)
             } else if (gamepad1.a) {
                 intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, 800.0)
             }
 
-            if (!intakeArmMotor.isBusy && intakeArmMotor.currentPosition <= 0) {
-                telemetry.addData("Arm motor not busy", intakeArmMotor.currentPosition)
-                intakeArmMotor.initializeForRunToPosition(INTAKE_ARM_START_POSITION, Direction.FORWARD)
-            }
-            // END SET SLIDE MOTOR MODE AND POWER
+//            if (!intakeArmMotor.isBusy && intakeArmMotor.currentPosition <= INTAKE_ARM_START_POSITION) {
+//                telemetry.addData("Arm motor not busy", intakeArmMotor.currentPosition)
+//                intakeArmMotor.initializeForRunToPosition(INTAKE_ARM_START_POSITION, Direction.FORWARD)
+//            }
+            // END SET ARM MOTOR MODE AND POWER
 
             telemetry.addData("Intake arm motor target position", intakeArmMotor.targetPosition)
             telemetry.addData("Intake arm motor current position", intakeArmMotor.currentPosition)
-            telemetry.addData("Intake arm motor current", intakeArmMotor.getCurrent(CurrentUnit.AMPS))
+            telemetry.addData(
+                "Intake arm motor current",
+                intakeArmMotor.getCurrent(CurrentUnit.AMPS)
+            )
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
 
             // START SET BUCKET SERVO MOTOR POSITION
@@ -223,13 +226,19 @@ class MecanumTeleOp : LinearOpMode() {
         }
     }
 
-    private fun DcMotorEx.initializeForRunToPosition(position: Double, direction: Direction) {
+    private fun DcMotorEx.initializeForRunToPosition(
+        position: Double,
+        direction: Direction,
+        setPowerToZero: Boolean = false
+    ) {
         zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         this.direction = direction
         targetPosition = position.toInt()
         mode = DcMotor.RunMode.RUN_TO_POSITION
         mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        power = 0.0
+        if (setPowerToZero) {
+            power = 0.0
+        }
     }
 
     private fun DcMotorEx.runToPosition(position: Double, velocity: Double) {
