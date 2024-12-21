@@ -32,11 +32,11 @@ private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 976.0 * SLIDE_LIFT_TICKS_P
 private const val BUCKET_SERVO_START_POSITION = 0.0
 private const val BUCKET_SERVO_END_POSITION = 0.35
 
-private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.015
+private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.025
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 
-private const val INTAKE_ARM_START_POSITION = .75 * ARM_MOTOR_TICKS_PER_MM
-private const val INTAKE_ARM_END_POSITION = 45.75 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_START_POSITION = 4.65 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_END_POSITION = 47.75 * ARM_MOTOR_TICKS_PER_MM
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -96,8 +96,21 @@ class MecanumTeleOp : LinearOpMode() {
         backLeftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         backRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
-        slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE, true)
-        intakeArmMotor.initializeForRunToPosition(INTAKE_ARM_START_POSITION, Direction.FORWARD)
+        // Initialize the slide motor to zero
+        slideMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        slideMotor.direction = Direction.REVERSE
+        slideMotor.targetPosition = 0
+        slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
+        slideMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+
+        // Initialize the arm motor to zero
+        intakeArmMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        intakeArmMotor.direction = Direction.FORWARD
+        intakeArmMotor.targetPosition = 0
+        intakeArmMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        intakeArmMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
+
+        intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, 800.0)
 
         intakeSlideServo.direction = Servo.Direction.REVERSE
         intakeSlideServo.position = INTAKE_SLIDE_SERVO_START_POSITION
@@ -166,11 +179,6 @@ class MecanumTeleOp : LinearOpMode() {
             } else if (gamepad1.a) {
                 intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, 800.0)
             }
-
-//            if (!intakeArmMotor.isBusy && intakeArmMotor.currentPosition <= INTAKE_ARM_START_POSITION) {
-//                telemetry.addData("Arm motor not busy", intakeArmMotor.currentPosition)
-//                intakeArmMotor.initializeForRunToPosition(INTAKE_ARM_START_POSITION, Direction.FORWARD)
-//            }
             // END SET ARM MOTOR MODE AND POWER
 
             telemetry.addData("Intake arm motor target position", intakeArmMotor.targetPosition)
