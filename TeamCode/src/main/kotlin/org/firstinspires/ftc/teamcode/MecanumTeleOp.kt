@@ -35,8 +35,8 @@ private const val BUCKET_SERVO_END_POSITION = 0.35
 private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.025
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 
-private const val INTAKE_ARM_START_POSITION = 4.65 * ARM_MOTOR_TICKS_PER_MM
-private const val INTAKE_ARM_END_POSITION = 47.75 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_START_POSITION = 2.35 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_END_POSITION = 48.275 * ARM_MOTOR_TICKS_PER_MM
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -212,11 +212,11 @@ class MecanumTeleOp : LinearOpMode() {
             // START SET INTAKE SERVO POWER
 
             if (gamepad1.left_bumper) {
-                intakeServo.direction = Direction.FORWARD
+                intakeServo.direction = Direction.REVERSE
             }
 
             if (gamepad1.right_bumper) {
-                intakeServo.direction = Direction.REVERSE
+                intakeServo.direction = Direction.FORWARD
             }
 
             intakeServo.power = if (gamepad1.left_bumper || gamepad1.right_bumper) {
