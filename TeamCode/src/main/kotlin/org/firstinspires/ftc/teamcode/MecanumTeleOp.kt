@@ -29,8 +29,9 @@ private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 976.0 * SLIDE_LIFT_TICKS_PER_MM
 
-private const val BUCKET_SERVO_START_POSITION = 0.0
-private const val BUCKET_SERVO_END_POSITION = 0.35
+private const val BUCKET_SERVO_INIT_POSITION = 0.0
+private const val BUCKET_SERVO_START_POSITION = 0.20
+private const val BUCKET_SERVO_END_POSITION = 0.50
 
 private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.025
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
@@ -116,7 +117,7 @@ class MecanumTeleOp : LinearOpMode() {
         intakeSlideServo.position = INTAKE_SLIDE_SERVO_START_POSITION
 
         bucketServo.direction = Servo.Direction.REVERSE
-        bucketServo.position = BUCKET_SERVO_START_POSITION
+        bucketServo.position = BUCKET_SERVO_INIT_POSITION
 
         /* Send telemetry message to signify robot waiting */
         telemetry.addLine("Robot Ready")
@@ -125,6 +126,12 @@ class MecanumTeleOp : LinearOpMode() {
         waitForStart()
 
         if (isStopRequested) return
+
+        if (isStarted) {
+            bucketServo.position = BUCKET_SERVO_START_POSITION
+            telemetry.addLine("Robot Started")
+            telemetry.update()
+        }
 
         while (opModeIsActive()) {
             // START SETUP MECANUM DRIVETRAIN MOTORS
