@@ -4,14 +4,22 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
+import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 
 private const val DRIVE_SPEED: Double = 0.5
 
 private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
+
 private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
 private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
 private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
+private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
+
+private const val BUCKET_SERVO_INIT_POSITION = 0.0
+private const val BUCKET_SERVO_START_POSITION = 0.20
+
+private const val SECONDS_TO_OBSERVATION_ZONE_FROM_START: Int = 2
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -34,6 +42,10 @@ class MecanumAutonomous : LinearOpMode() {
         hardwareMap.dcMotor.get(HARDWARE_MAP_BACK_RIGHT_MOTOR)
     }
 
+    private val bucketServo: Servo by lazy {
+        hardwareMap.servo.get(HARDWARE_MAP_BUCKET_SERVO_MOTOR)
+    }
+
     override fun runOpMode() {
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -50,6 +62,9 @@ class MecanumAutonomous : LinearOpMode() {
         backLeftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         backRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
+        bucketServo.direction = Servo.Direction.REVERSE
+        bucketServo.position = BUCKET_SERVO_INIT_POSITION
+
         /* Send telemetry message to signify robot waiting */
         telemetry.addLine("Robot Ready")
         telemetry.update()
@@ -61,6 +76,9 @@ class MecanumAutonomous : LinearOpMode() {
         if (isStopRequested) return
 
         if (isStarted) {
+            bucketServo.position = BUCKET_SERVO_START_POSITION
+            telemetry.addLine("Robot Started")
+            telemetry.update()
             timer.reset()
         }
 
@@ -70,7 +88,7 @@ class MecanumAutonomous : LinearOpMode() {
             // Limit speed to MaxPower
             val maxPower = DRIVE_SPEED
 
-            while (timer.seconds() <= 2.5) {
+            while (timer.seconds() <= SECONDS_TO_OBSERVATION_ZONE_FROM_START) {
                 frontLeftMotor.power = maxPower
                 backLeftMotor.power = -maxPower
                 frontRightMotor.power = maxPower
