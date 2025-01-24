@@ -37,7 +37,7 @@ private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.025
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 
 private const val INTAKE_ARM_START_POSITION = 2.35 * ARM_MOTOR_TICKS_PER_MM
-private const val INTAKE_ARM_END_POSITION = 48.275 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_END_POSITION = 48.3 * ARM_MOTOR_TICKS_PER_MM
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
@@ -97,12 +97,7 @@ class MecanumTeleOp : LinearOpMode() {
         backLeftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         backRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
-        // Initialize the slide motor to zero
-        slideMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        slideMotor.direction = Direction.REVERSE
-        slideMotor.targetPosition = 0
-        slideMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
-        slideMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE, true)
 
         // Initialize the arm motor to zero
         intakeArmMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -169,7 +164,7 @@ class MecanumTeleOp : LinearOpMode() {
                 slideMotor.runToPosition(SLIDE_LIFT_COLLAPSED, 2100.0)
             }
 
-            if (!slideMotor.isBusy && slideMotor.currentPosition <= 0) {
+            if (!slideMotor.isBusy && slideMotor.targetPosition <= 0) {
                 telemetry.addData("Slide not busy", slideMotor.currentPosition)
                 slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE, true)
             }
