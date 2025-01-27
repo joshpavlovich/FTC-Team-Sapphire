@@ -19,7 +19,7 @@ private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
 private const val BUCKET_SERVO_INIT_POSITION = 0.0
 private const val BUCKET_SERVO_START_POSITION = 0.20
 
-private const val SECONDS_TO_OBSERVATION_ZONE_FROM_START: Int = 2
+private const val SECONDS_TO_OBSERVATION_ZONE_FROM_START: Double = 1.5
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
