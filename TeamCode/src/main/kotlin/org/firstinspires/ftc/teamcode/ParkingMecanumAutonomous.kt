@@ -1,16 +1,12 @@
 package org.firstinspires.ftc.teamcode
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 
-private const val DRIVE_SPEED: Double = 0.5
-
 private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
-
 private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
 private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
 private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
@@ -19,13 +15,10 @@ private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
 private const val BUCKET_SERVO_INIT_POSITION = 0.0
 private const val BUCKET_SERVO_START_POSITION = 0.20
 
-private const val SECONDS_TO_OBSERVATION_ZONE_FROM_START: Double = 1.5
-
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
 
-@Autonomous(name = "Team Sapphire: Mecanum Autonomous", group = "Robot")
-class MecanumAutonomous : LinearOpMode() {
+abstract class ParkingMecanumAutonomous : LinearOpMode() {
 
     // DECLARE OUR MOTORS
     // MAKE SURE YOUR ID'S MATCH YOUR CONFIGURATION
@@ -86,9 +79,9 @@ class MecanumAutonomous : LinearOpMode() {
             // START SETUP MECANUM DRIVETRAIN MOTORS
 
             // Limit speed to MaxPower
-            val maxPower = DRIVE_SPEED
+            val maxPower = getDriveSpeed()
 
-            while (timer.seconds() <= SECONDS_TO_OBSERVATION_ZONE_FROM_START) {
+            while (timer.seconds() <= getSecondsToObservationZoneFromStart()) {
                 frontLeftMotor.power = maxPower
                 backLeftMotor.power = -maxPower
                 frontRightMotor.power = maxPower
@@ -107,4 +100,8 @@ class MecanumAutonomous : LinearOpMode() {
             telemetry.update()
         }
     }
+
+    abstract fun getDriveSpeed(): Double
+
+    abstract fun getSecondsToObservationZoneFromStart(): Double
 }
