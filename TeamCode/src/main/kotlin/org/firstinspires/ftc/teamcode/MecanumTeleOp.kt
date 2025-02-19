@@ -23,8 +23,15 @@ private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
 private const val HARDWARE_MAP_INTAKE_ARM_MOTOR = "intakeArmMotor"
 private const val HARDWARE_MAP_INTAKE_SERVO_MOTOR = "intakeServo"
 
-private const val SLIDE_LIFT_TICKS_PER_MM = (751.8) / 120
-private const val ARM_MOTOR_TICKS_PER_MM = (1992.6) / 96.0 // IS THIS THE CORRECT DIAMETER???
+// Encoder Resolution for Viper Slide 223 RPM Motor = ((((1+(46/11))) * (1+(46/11))) * 28)
+// From https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-26-9-1-ratio-24mm-length-8mm-rex-shaft-223-rpm-3-3-5v-encoder/
+// Encoder Resolution for Arm 84 RPM Motor = ((((1+(46/17))) * (1+(46/17))) * (1+(46/11)) * 28)
+// From https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-71-2-1-ratio-24mm-length-8mm-rex-shaft-84-rpm-3-3-5v-encoder/
+// Ticks Per Revolution = (Motor Encoder Resolution / Diameter Millimeters)
+private const val SLIDE_LIFT_TICKS_PER_MM = (751.8) / 120 // Encoder Resolution Formula ->	((((1+(46/11))) * (1+(46/11))) * 28) = 751.8
+private const val ARM_MOTOR_TICKS_PER_MM = (1992.6) / 96.0 // Encoder Resolution Formula ->	((((1+(46/17))) * (1+(46/17))) * (1+(46/11)) * 28) = 1992.6
+
+// Distance in Millimeters for High Basket scoring position = high basket height in Millimeters * Viper Slide Lift Ticks Per Millimeter
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 976.0 * SLIDE_LIFT_TICKS_PER_MM
