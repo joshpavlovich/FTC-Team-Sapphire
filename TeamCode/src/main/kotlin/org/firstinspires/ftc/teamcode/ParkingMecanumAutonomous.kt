@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 
+const val DELAY_SECONDS_PARKING_TO_OBSERVATION_ZONE = 27.5
+
 private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
 private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
 private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
@@ -62,17 +64,18 @@ abstract class ParkingMecanumAutonomous : LinearOpMode() {
         telemetry.addLine("Robot Ready")
         telemetry.update()
 
-        val timer = ElapsedTime()
+        var driveTimer: ElapsedTime? = null
+        val autoDelayedTimer = ElapsedTime()
 
         waitForStart()
 
         if (isStopRequested) return
 
         if (isStarted) {
+            autoDelayedTimer.reset()
             bucketServo.position = BUCKET_SERVO_START_POSITION
             telemetry.addLine("Robot Started")
             telemetry.update()
-            timer.reset()
         }
 
         while (opModeIsActive()) {
@@ -81,11 +84,17 @@ abstract class ParkingMecanumAutonomous : LinearOpMode() {
             // Limit speed to MaxPower
             val maxPower = getDriveSpeed()
 
-            while (timer.seconds() <= getSecondsToObservationZoneFromStart()) {
-                frontLeftMotor.power = maxPower
-                backLeftMotor.power = -maxPower
-                frontRightMotor.power = maxPower
-                backRightMotor.power = maxPower
+            if (autoDelayedTimer.seconds() >= getSecondsToDelayFromStart()) {
+                if (driveTimer == null) {
+                    driveTimer = ElapsedTime()
+                } else {
+                    while (driveTimer.seconds() <= getSecondsToObservationZoneFromStart()) {
+                        frontLeftMotor.power = maxPower
+                        backLeftMotor.power = -maxPower
+                        frontRightMotor.power = maxPower
+                        backRightMotor.power = maxPower
+                    }
+                }
             }
 
             frontLeftMotor.power = 0.0
@@ -97,11 +106,15 @@ abstract class ParkingMecanumAutonomous : LinearOpMode() {
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.addData(TELEMETRY_KEY_ROTATIONS, frontLeftMotor.currentPosition)
             telemetry.addData(TELEMETRY_KEY_SPEED, frontLeftMotor.power)
+            telemetry.addData("Delay Timer seconds", autoDelayedTimer.seconds())
+            telemetry.addData("Drive Timer seconds", driveTimer?.seconds() ?: 0.0)
             telemetry.update()
         }
     }
 
     abstract fun getDriveSpeed(): Double
+
+    abstract fun getSecondsToDelayFromStart(): Double
 
     abstract fun getSecondsToObservationZoneFromStart(): Double
 }
