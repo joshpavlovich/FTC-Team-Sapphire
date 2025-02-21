@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
+import org.firstinspires.ftc.teamcode.extension.initializeForRunToPosition
+import org.firstinspires.ftc.teamcode.extension.runToPosition
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -241,27 +243,5 @@ class MecanumTeleOp : LinearOpMode() {
             telemetry.addData(TELEMETRY_KEY_Y_VALUE, leftStickY)
             telemetry.update()
         }
-    }
-
-    private fun DcMotorEx.initializeForRunToPosition(
-        position: Double,
-        direction: Direction,
-        setPowerToZero: Boolean = false
-    ) {
-        zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        this.direction = direction
-        targetPosition = position.toInt()
-        mode = DcMotor.RunMode.RUN_TO_POSITION
-        mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        if (setPowerToZero) {
-            power = 0.0
-        }
-    }
-
-    private fun DcMotorEx.runToPosition(position: Double, velocity: Double) {
-        targetPosition = position.toInt() // the position you want to reach
-//        targetPositionTolerance = 1 // set accuracy to 1 tick
-        this.velocity = velocity
-        mode = DcMotor.RunMode.RUN_TO_POSITION
     }
 }
