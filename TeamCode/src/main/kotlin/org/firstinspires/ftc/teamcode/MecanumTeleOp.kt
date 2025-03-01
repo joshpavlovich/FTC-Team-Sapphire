@@ -10,15 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.teamcode.extension.initializeForRunToPosition
 import org.firstinspires.ftc.teamcode.extension.runToPosition
-import kotlin.math.abs
-import kotlin.math.max
 
-private const val DRIVE_SPEED: Double = 0.5
-
-private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
-private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
-private const val HARDWARE_MAP_BACK_LEFT_MOTOR = "backLeftMotor"
-private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
 private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
@@ -30,8 +22,10 @@ private const val HARDWARE_MAP_INTAKE_SERVO_MOTOR = "intakeServo"
 // Encoder Resolution for Arm 84 RPM Motor = ((((1+(46/17))) * (1+(46/17))) * (1+(46/11)) * 28)
 // From https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-71-2-1-ratio-24mm-length-8mm-rex-shaft-84-rpm-3-3-5v-encoder/
 // Ticks Per Revolution = (Motor Encoder Resolution / Diameter Millimeters)
-private const val SLIDE_LIFT_TICKS_PER_MM = (751.8) / 120 // Encoder Resolution Formula ->	((((1+(46/11))) * (1+(46/11))) * 28) = 751.8
-private const val ARM_MOTOR_TICKS_PER_MM = (1992.6) / 96.0 // Encoder Resolution Formula ->	((((1+(46/17))) * (1+(46/17))) * (1+(46/11)) * 28) = 1992.6
+private const val SLIDE_LIFT_TICKS_PER_MM =
+    (751.8) / 120 // Encoder Resolution Formula ->	((((1+(46/11))) * (1+(46/11))) * 28) = 751.8
+private const val ARM_MOTOR_TICKS_PER_MM =
+    (1992.6) / 96.0 // Encoder Resolution Formula ->	((((1+(46/17))) * (1+(46/17))) * (1+(46/11)) * 28) = 1992.6
 
 // Distance in Millimeters for High Basket scoring position = high basket height in Millimeters * Viper Slide Lift Ticks Per Millimeter
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
@@ -48,27 +42,11 @@ private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 private const val INTAKE_ARM_START_POSITION = 2.35 * ARM_MOTOR_TICKS_PER_MM
 private const val INTAKE_ARM_END_POSITION = 48.3 * ARM_MOTOR_TICKS_PER_MM
 
-private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
-private const val TELEMETRY_KEY_SPEED = "Speed"
-private const val TELEMETRY_KEY_Y_VALUE = "Y Value"
-
 @TeleOp(name = "Team Sapphire: Mecanum TeleOp", group = "Robot")
 class MecanumTeleOp : LinearOpMode() {
 
-    // DECLARE OUR MOTORS
-    // MAKE SURE YOUR ID'S MATCH YOUR CONFIGURATION
-    private val frontLeftMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_FRONT_LEFT_MOTOR)
-    }
-    private val backLeftMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_BACK_LEFT_MOTOR)
-    }
-    private val frontRightMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_FRONT_RIGHT_MOTOR)
-    }
-    private val backRightMotor: DcMotor by lazy {
-        hardwareMap.dcMotor.get(HARDWARE_MAP_BACK_RIGHT_MOTOR)
-    }
+    // get an instance of the "Robot" class.
+    private val robot = BaseMecanumRobot(this)
 
     private val slideMotor: DcMotorEx by lazy {
         hardwareMap.dcMotor.get(HARDWARE_MAP_SLIDE_MOTOR) as DcMotorEx
@@ -91,20 +69,7 @@ class MecanumTeleOp : LinearOpMode() {
     }
 
     override fun runOpMode() {
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
-        frontRightMotor.direction = Direction.FORWARD
-        backRightMotor.direction = Direction.FORWARD
-
-        // Setting zeroPowerBehavior to BRAKE enables a "brake mode".
-        // This causes the motor to slow down much faster when it is coasting.
-        // This creates a much more controllable drivetrain. As the robot
-        // stops much quicker.
-        frontLeftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        frontRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        backLeftMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        backRightMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        robot.initialize()
 
         slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE, true)
 
@@ -138,33 +103,13 @@ class MecanumTeleOp : LinearOpMode() {
         }
 
         while (opModeIsActive()) {
-            // START SETUP MECANUM DRIVETRAIN MOTORS
             // Remember, Y stick value is reversed
-            val leftStickY: Double = -gamepad1.left_stick_y.toDouble()
-            val leftStickX: Double = gamepad1.left_stick_x.toDouble() * 1.1
-            val rightStickX: Double = gamepad1.right_stick_x.toDouble()
-
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
-            val denominator: Double = max(abs(leftStickY) + abs(leftStickX) + abs(rightStickX), 1.0)
-            val frontLeftPower = (leftStickY + leftStickX + rightStickX) / denominator
-            val backLeftPower = (leftStickY - leftStickX + rightStickX) / denominator
-            val frontRightPower = (leftStickY - leftStickX - rightStickX) / denominator
-            val backRightPower = (leftStickY + leftStickX - rightStickX) / denominator
-
-            // Limit speed to MaxPower
-            val maxPower: Double = if (gamepad1.left_trigger == 0F) {
-                DRIVE_SPEED
-            } else {
-                DRIVE_SPEED + ((1 - DRIVE_SPEED) * gamepad1.left_trigger)
-            }
-
-            frontLeftMotor.power = frontLeftPower * maxPower
-            backLeftMotor.power = -backLeftPower * maxPower
-            frontRightMotor.power = frontRightPower * maxPower
-            backRightMotor.power = backRightPower * maxPower
-            // END SETUP MECANUM DRIVETRAIN MOTORS
+            robot.move(
+                axial = -gamepad1.left_stick_y.toDouble(),
+                lateral = gamepad1.left_stick_x.toDouble() * 1.1,
+                yaw = gamepad1.right_stick_x.toDouble(),
+                powerMultiplier = gamepad1.left_trigger.toDouble()
+            )
 
             // START SET SLIDE MOTOR MODE AND POWER
             if (gamepad1.dpad_up) {
@@ -238,9 +183,6 @@ class MecanumTeleOp : LinearOpMode() {
             // END SET INTAKE SERVO POWER
 
             // ADD TELEMETRY DATA AND UPDATE
-            telemetry.addData(TELEMETRY_KEY_ROTATIONS, frontLeftMotor.currentPosition)
-            telemetry.addData(TELEMETRY_KEY_SPEED, frontLeftMotor.power)
-            telemetry.addData(TELEMETRY_KEY_Y_VALUE, leftStickY)
             telemetry.update()
         }
     }
