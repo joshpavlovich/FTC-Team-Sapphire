@@ -45,7 +45,7 @@ private const val INTAKE_ARM_END_POSITION = 48.3 * ARM_MOTOR_TICKS_PER_MM
 @TeleOp(name = "Team Sapphire: Mecanum TeleOp", group = "Robot")
 class MecanumTeleOp : LinearOpMode() {
 
-    // get an instance of the "Robot" class.
+    // Instance of the "Robot" class.
     private val robot = BaseMecanumRobot(this)
 
     private val slideMotor: DcMotorEx by lazy {

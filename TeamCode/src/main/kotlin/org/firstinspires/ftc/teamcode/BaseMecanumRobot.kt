@@ -45,9 +45,9 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
      * @param axial Driving forward and backward - Left-joystick Forward/Backward
      * @param lateral Strafing right and left - Left-joystick Right and Left
      * @param yaw Rotating Clockwise and counter clockwise - Right-joystick Right and Left
-     * @param powerMultiplier Multiplier tp increase default speed - Left-trigger
+     * @param powerMultiplier Multiplier to increase default speed (a.k.a, turbo) - Left-trigger
      */
-    fun move(axial: Double, lateral: Double, yaw: Double, powerMultiplier: Double) {
+    fun move(axial: Double, lateral: Double, yaw: Double, powerMultiplier: Double = 0.0) {
         // Denominator is the largest motor power (absolute value) or 1
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
@@ -70,7 +70,14 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
         backRightMotor.power = backRightPower * maxPower
 
         telemetry.addData("Axes D:S:Y", "%5.2f %5.2f %5.2f", axial, lateral, yaw)
-        telemetry.addData("Wheels lf:rf:lb:rb", "%5.2f %5.2f %5.2f %5.2f", frontLeftPower, frontRightPower, backLeftPower, backRightPower)
+        telemetry.addData(
+            "Wheels lf:rf:lb:rb",
+            "%5.2f %5.2f %5.2f %5.2f",
+            frontLeftPower,
+            frontRightPower,
+            backLeftPower,
+            backRightPower
+        )
         telemetry.addData(TELEMETRY_KEY_SPEED, frontLeftMotor.power)
         telemetry.addData(TELEMETRY_KEY_Y_VALUE, axial)
     }
