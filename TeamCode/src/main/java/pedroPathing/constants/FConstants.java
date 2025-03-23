@@ -26,19 +26,19 @@ public class FConstants {
         FollowerConstants.forwardZeroPowerAcceleration = -31.363916998314;
         FollowerConstants.lateralZeroPowerAcceleration = -66.926259342123;
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0);
+        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.15,0,0.01,0);
         FollowerConstants.useSecondaryTranslationalPID = false;
         FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0); // Not being used, @see useSecondaryTranslationalPID
 
-        FollowerConstants.headingPIDFCoefficients.setCoefficients(2,0,0.1,0);
+        FollowerConstants.headingPIDFCoefficients.setCoefficients(1.5,0,0.1,0);
         FollowerConstants.useSecondaryHeadingPID = false;
         FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(2,0,0.1,0); // Not being used, @see useSecondaryHeadingPID
 
-        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0);
+        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.012,0,0.000012,0.6,0);
         FollowerConstants.useSecondaryDrivePID = false;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
-        FollowerConstants.zeroPowerAccelerationMultiplier = 3;
+        FollowerConstants.zeroPowerAccelerationMultiplier = 1;
         FollowerConstants.centripetalScaling = 0.0005;
 
         FollowerConstants.pathEndTimeoutConstraint = 500;
@@ -47,7 +47,7 @@ public class FConstants {
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
         FollowerConstants.pathEndHeadingConstraint = 0.007;
 
-// Seattle Solvers
+// Seattle Solvers example constants for secondary tuners
 //        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.16,0,0.01,0);
 //        FollowerConstants.useSecondaryTranslationalPID = true;
 //        FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.13,0,0.015,0); // @see useSecondaryTranslationalPID
@@ -68,5 +68,6 @@ public class FConstants {
 //        FollowerConstants.pathEndVelocityConstraint = 0.1;
 //        FollowerConstants.pathEndTranslationalConstraint = 0.1;
 //        FollowerConstants.pathEndHeadingConstraint = 0.006;
+// Seattle Solvers example constants for secondary tuners
     }
 }
