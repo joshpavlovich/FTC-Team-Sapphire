@@ -20,11 +20,11 @@ public class FConstants {
 
         FollowerConstants.mass = 10.88622;
 
-        FollowerConstants.xMovement = 57.8741;
-        FollowerConstants.yMovement = 52.295;
+        FollowerConstants.xMovement = 82.12480179553877;
+        FollowerConstants.yMovement = 72.48744009683136;
 
-        FollowerConstants.forwardZeroPowerAcceleration = -41.278;
-        FollowerConstants.lateralZeroPowerAcceleration = -59.7819;
+        FollowerConstants.forwardZeroPowerAcceleration = -31.363916998314;
+        FollowerConstants.lateralZeroPowerAcceleration = -66.926259342123;
 
         FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0);
         FollowerConstants.useSecondaryTranslationalPID = false;
@@ -38,7 +38,7 @@ public class FConstants {
         FollowerConstants.useSecondaryDrivePID = false;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
-        FollowerConstants.zeroPowerAccelerationMultiplier = 4;
+        FollowerConstants.zeroPowerAccelerationMultiplier = 3;
         FollowerConstants.centripetalScaling = 0.0005;
 
         FollowerConstants.pathEndTimeoutConstraint = 500;
@@ -46,5 +46,27 @@ public class FConstants {
         FollowerConstants.pathEndVelocityConstraint = 0.1;
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
         FollowerConstants.pathEndHeadingConstraint = 0.007;
+
+// Seattle Solvers
+//        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.16,0,0.01,0);
+//        FollowerConstants.useSecondaryTranslationalPID = true;
+//        FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.13,0,0.015,0); // @see useSecondaryTranslationalPID
+//
+//        FollowerConstants.headingPIDFCoefficients.setCoefficients(1.5,0,0.1,0);
+//        FollowerConstants.useSecondaryHeadingPID = true;
+//        FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(0.9,0,0.08,0); // @see useSecondaryHeadingPID
+//
+//        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.018,0,0.0000012,0.6,0);
+//        FollowerConstants.useSecondaryDrivePID = true;
+//        FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.01,0,0.000001,0.6,0); // @see useSecondaryDrivePID
+//
+//        FollowerConstants.zeroPowerAccelerationMultiplier = 3;
+//        FollowerConstants.centripetalScaling = 0.0004;
+//
+//        FollowerConstants.pathEndTimeoutConstraint = 50;
+//        FollowerConstants.pathEndTValueConstraint = 0.98;
+//        FollowerConstants.pathEndVelocityConstraint = 0.1;
+//        FollowerConstants.pathEndTranslationalConstraint = 0.1;
+//        FollowerConstants.pathEndHeadingConstraint = 0.006;
     }
 }
