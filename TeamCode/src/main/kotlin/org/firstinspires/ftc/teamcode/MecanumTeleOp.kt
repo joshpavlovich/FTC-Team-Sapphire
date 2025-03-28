@@ -15,7 +15,8 @@ private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
 private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
 private const val HARDWARE_MAP_INTAKE_ARM_MOTOR = "intakeArmMotor"
-private const val HARDWARE_MAP_INTAKE_SERVO_MOTOR = "intakeServo"
+private const val HARDWARE_MAP_INTAKE_LEFT_SERVO_MOTOR = "intakeLeftServo"
+private const val HARDWARE_MAP_INTAKE_RIGHT_SERVO_MOTOR = "intakeRightServo"
 
 // Encoder Resolution for Viper Slide 223 RPM Motor = ((((1+(46/11))) * (1+(46/11))) * 28)
 // From https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-26-9-1-ratio-24mm-length-8mm-rex-shaft-223-rpm-3-3-5v-encoder/
@@ -64,8 +65,12 @@ class MecanumTeleOp : LinearOpMode() {
         hardwareMap.servo.get(HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR)
     }
 
-    private val intakeServo: CRServo by lazy {
-        hardwareMap.crservo.get(HARDWARE_MAP_INTAKE_SERVO_MOTOR)
+    private val intakeLeftServo: CRServo by lazy {
+        hardwareMap.crservo.get(HARDWARE_MAP_INTAKE_LEFT_SERVO_MOTOR)
+    }
+
+    private val intakeRightServo: CRServo by lazy {
+        hardwareMap.crservo.get(HARDWARE_MAP_INTAKE_RIGHT_SERVO_MOTOR)
     }
 
     override fun runOpMode() {
@@ -168,18 +173,22 @@ class MecanumTeleOp : LinearOpMode() {
             // START SET INTAKE SERVO POWER
 
             if (gamepad1.left_bumper) {
-                intakeServo.direction = Direction.REVERSE
+                intakeLeftServo.direction = Direction.FORWARD
+                intakeRightServo.direction = Direction.REVERSE
             }
 
             if (gamepad1.right_bumper) {
-                intakeServo.direction = Direction.FORWARD
+                intakeLeftServo.direction = Direction.REVERSE
+                intakeRightServo.direction = Direction.FORWARD
             }
 
-            intakeServo.power = if (gamepad1.left_bumper || gamepad1.right_bumper) {
+            val intakeServoPower = if (gamepad1.left_bumper || gamepad1.right_bumper) {
                 1.0
             } else {
                 0.0
             }
+            intakeLeftServo.power = intakeServoPower
+            intakeRightServo.power = intakeServoPower
             // END SET INTAKE SERVO POWER
 
             // ADD TELEMETRY DATA AND UPDATE
