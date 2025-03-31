@@ -113,7 +113,8 @@ class MecanumTeleOp : LinearOpMode() {
                 axial = -gamepad1.left_stick_y.toDouble(),
                 lateral = gamepad1.left_stick_x.toDouble() * 1.1,
                 yaw = gamepad1.right_stick_x.toDouble(),
-                powerMultiplier = gamepad1.left_trigger.toDouble()
+                powerMultiplier = gamepad1.left_trigger.toDouble(),
+                powerReducer = gamepad1.right_trigger.toDouble()
             )
 
             // START SET SLIDE MOTOR MODE AND POWER

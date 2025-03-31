@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import kotlin.math.abs
 import kotlin.math.max
 
-private const val DEFAULT_DRIVE_SPEED: Double = 0.5
+private const val DEFAULT_DRIVE_SPEED: Double = 0.6
 
 private const val HARDWARE_MAP_FRONT_LEFT_MOTOR = "frontLeftMotor"
 private const val HARDWARE_MAP_FRONT_RIGHT_MOTOR = "frontRightMotor"
@@ -46,8 +46,9 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
      * @param lateral Strafing right and left - Left-joystick Right and Left
      * @param yaw Rotating Clockwise and counter clockwise - Right-joystick Right and Left
      * @param powerMultiplier Multiplier to increase default speed (a.k.a, turbo) - Left-trigger
+     * @param powerReducer Decrease default speed - Right-trigger
      */
-    fun move(axial: Double, lateral: Double, yaw: Double, powerMultiplier: Double = 0.0) {
+    fun move(axial: Double, lateral: Double, yaw: Double, powerMultiplier: Double = 0.0, powerReducer: Double = 0.0) {
         // Denominator is the largest motor power (absolute value) or 1
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
@@ -58,10 +59,13 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
         val backRightPower = (axial + lateral - yaw) / denominator
 
         // Limit speed to MaxPower
-        val maxPower: Double = if (powerMultiplier == 0.0) {
-            DEFAULT_DRIVE_SPEED
-        } else {
-            DEFAULT_DRIVE_SPEED + ((1 - DEFAULT_DRIVE_SPEED) * powerMultiplier)
+        val maxPower: Double = when {
+            powerReducer > 0.0 -> {
+                val reducer = if (powerReducer > 0.8) 0.8 else powerReducer
+                DEFAULT_DRIVE_SPEED - ((1 - DEFAULT_DRIVE_SPEED) * reducer)
+            }
+            powerMultiplier > 0.0 -> DEFAULT_DRIVE_SPEED + ((1 - DEFAULT_DRIVE_SPEED) * powerMultiplier)
+            else -> DEFAULT_DRIVE_SPEED
         }
 
         frontLeftMotor.power = frontLeftPower * maxPower
