@@ -1,22 +1,28 @@
 package org.firstinspires.ftc.teamcode
 
+import android.graphics.Color
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor
+import com.qualcomm.robotcore.hardware.NormalizedRGBA
 import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.teamcode.extension.initializeForRunToPosition
 import org.firstinspires.ftc.teamcode.extension.runToPosition
 
-private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
+private const val HARDWARE_MAP_BLINKEN_LED_DRIVER = "blinkenLedDriver"
 private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
+private const val HARDWARE_MAP_COLOR_SENSOR = "colorSensor"
 private const val HARDWARE_MAP_INTAKE_SLIDE_SERVO_MOTOR = "intakeSlideServo"
 private const val HARDWARE_MAP_INTAKE_ARM_MOTOR = "intakeArmMotor"
 private const val HARDWARE_MAP_INTAKE_LEFT_SERVO_MOTOR = "intakeLeftServo"
 private const val HARDWARE_MAP_INTAKE_RIGHT_SERVO_MOTOR = "intakeRightServo"
+private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 
 // Encoder Resolution for Viper Slide 223 RPM Motor = ((((1+(46/11))) * (1+(46/11))) * 28)
 // From https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-26-9-1-ratio-24mm-length-8mm-rex-shaft-223-rpm-3-3-5v-encoder/
@@ -72,6 +78,20 @@ class MecanumTeleOp : LinearOpMode() {
     private val intakeRightServo: CRServo by lazy {
         hardwareMap.crservo.get(HARDWARE_MAP_INTAKE_RIGHT_SERVO_MOTOR)
     }
+
+    private val colorSensor: NormalizedColorSensor by lazy {
+        hardwareMap.colorSensor.get(HARDWARE_MAP_COLOR_SENSOR) as NormalizedColorSensor
+    }
+
+    private val blinkinLedDriver: RevBlinkinLedDriver by lazy {
+        hardwareMap.get(RevBlinkinLedDriver::class.java, HARDWARE_MAP_BLINKEN_LED_DRIVER)
+    }
+
+    // Once per loop, we will update this hsvValues array. The first element (0) will contain the
+    // hue, the second element (1) will contain the saturation, and the third element (2) will
+    // contain the value. See http://web.archive.org/web/20190311170843/https://infohost.nmt.edu/tcc/help/pubs/colortheory/web/hsv.html
+    // for an explanation of HSV color.
+    val hsvValues: FloatArray = FloatArray(3)
 
     override fun runOpMode() {
         robot.initialize()
@@ -191,6 +211,33 @@ class MecanumTeleOp : LinearOpMode() {
             intakeLeftServo.power = intakeServoPower
             intakeRightServo.power = intakeServoPower
             // END SET INTAKE SERVO POWER
+
+
+            // Get the normalized colors from the sensor
+            val colors: NormalizedRGBA = colorSensor.normalizedColors
+
+            telemetry.addLine()
+                .addData("Red", "%.3f", colors.red)
+                .addData("Green", "%.3f", colors.green)
+                .addData("Blue", "%.3f", colors.blue)
+
+            // Update the hsvValues array by passing it to Color.colorToHSV()
+            Color.colorToHSV(colors.toColor(), hsvValues)
+
+            telemetry.addLine()
+                .addData("Hue", "%.3f", hsvValues[0])
+                .addData("Saturation", "%.3f", hsvValues[1])
+                .addData("Value", "%.3f", hsvValues[2])
+            telemetry.addData("Alpha", "%.3f", colors.alpha)
+
+            val hue = hsvValues[0].toInt()
+            val pattern = when (hue) {
+                in 20..30 -> RevBlinkinLedDriver.BlinkinPattern.RED
+                in 60..85 -> RevBlinkinLedDriver.BlinkinPattern.YELLOW
+                in 200..240 -> RevBlinkinLedDriver.BlinkinPattern.BLUE
+                else -> RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_OCEAN_PALETTE
+            }
+            blinkinLedDriver.setPattern(pattern)
 
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.update()
