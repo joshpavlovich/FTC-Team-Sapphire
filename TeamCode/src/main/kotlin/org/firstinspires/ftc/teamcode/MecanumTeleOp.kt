@@ -8,10 +8,10 @@ import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
+import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor
 import com.qualcomm.robotcore.hardware.NormalizedRGBA
 import com.qualcomm.robotcore.hardware.Servo
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.teamcode.extension.initializeForRunToPosition
 import org.firstinspires.ftc.teamcode.extension.runToPosition
 
@@ -36,8 +36,9 @@ private const val ARM_MOTOR_TICKS_PER_MM =
 
 // Distance in Millimeters for High Basket scoring position = high basket height in Millimeters * Viper Slide Lift Ticks Per Millimeter
 private const val SLIDE_LIFT_COLLAPSED = 0.0 * SLIDE_LIFT_TICKS_PER_MM
-private const val SLIDE_LIFT_SCORING_IN_LOW_BASKET = 806.52 * SLIDE_LIFT_TICKS_PER_MM
+private const val SLIDE_LIFT_LEVEL_ONE_ASCENT = 215.9 * SLIDE_LIFT_TICKS_PER_MM
 private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 976.0 * SLIDE_LIFT_TICKS_PER_MM
+private const val SLIDE_LIFT_VELOCITY = 2100.0
 
 private const val BUCKET_SERVO_INIT_POSITION = 0.0
 private const val BUCKET_SERVO_START_POSITION = 0.20
@@ -47,7 +48,9 @@ private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.0
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
 
 private const val INTAKE_ARM_START_POSITION = 2.35 * ARM_MOTOR_TICKS_PER_MM
-private const val INTAKE_ARM_END_POSITION = 48.3 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_END_POSITION = 47.3 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION = 31 * ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_VELOCITY = 800.0
 
 @TeleOp(name = "Team Sapphire: Mecanum TeleOp", group = "Robot")
 class MecanumTeleOp : LinearOpMode() {
@@ -94,6 +97,11 @@ class MecanumTeleOp : LinearOpMode() {
     val hsvValues: FloatArray = FloatArray(3)
 
     override fun runOpMode() {
+        // By setting these values to new Gamepad(), they will default to all
+        // boolean values as false and all float values as 0
+        val currentGamepad1 = Gamepad()
+        val previousGamepad1 = Gamepad()
+
         robot.initialize()
 
         slideMotor.initializeForRunToPosition(SLIDE_LIFT_COLLAPSED, Direction.REVERSE, true)
@@ -105,7 +113,7 @@ class MecanumTeleOp : LinearOpMode() {
         intakeArmMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         intakeArmMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
 
-        intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, 800.0)
+        intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, INTAKE_ARM_VELOCITY)
 
         intakeSlideServo.direction = Servo.Direction.REVERSE
         intakeSlideServo.position = INTAKE_SLIDE_SERVO_START_POSITION
@@ -128,20 +136,37 @@ class MecanumTeleOp : LinearOpMode() {
         }
 
         while (opModeIsActive()) {
+            // Store the gamepad values from the previous loop iteration in
+            // previousGamepad1/2 to be used in this loop iteration.
+            // This is equivalent to doing this at the end of the previous
+            // loop iteration, as it will run in the same order except for
+            // the first/last iteration of the loop.
+            previousGamepad1.copy(currentGamepad1)
+
+            // Store the gamepad values from this loop iteration in
+            // currentGamepad1/2 to be used for the entirety of this loop iteration.
+            // This prevents the gamepad values from changing between being
+            // used and stored in previousGamepad1/2.
+            currentGamepad1.copy(gamepad1)
+
+            val armIntakeDown = intakeArmMotor.currentPosition > 900
+            val intakeArmDownPowerReducer: Double = if (armIntakeDown) 1.0 else 0.0
             // Remember, Y stick value is reversed
             robot.move(
-                axial = -gamepad1.left_stick_y.toDouble(),
-                lateral = gamepad1.left_stick_x.toDouble() * 1.1,
-                yaw = gamepad1.right_stick_x.toDouble(),
-                powerMultiplier = gamepad1.left_trigger.toDouble(),
-                powerReducer = gamepad1.right_trigger.toDouble()
+                axial = -currentGamepad1.left_stick_y.toDouble(),
+                lateral = currentGamepad1.left_stick_x.toDouble() * 1.1,
+                yaw = currentGamepad1.right_stick_x.toDouble(),
+                powerMultiplier = currentGamepad1.left_trigger.toDouble(),
+                powerReducer = if (armIntakeDown) intakeArmDownPowerReducer else currentGamepad1.right_trigger.toDouble()
             )
 
             // START SET SLIDE MOTOR MODE AND POWER
-            if (gamepad1.dpad_up) {
-                slideMotor.runToPosition(SLIDE_LIFT_SCORING_IN_HIGH_BASKET, 2100.0)
-            } else if (gamepad1.dpad_down) {
-                slideMotor.runToPosition(SLIDE_LIFT_COLLAPSED, 2100.0)
+            if (currentGamepad1.dpad_up) {
+                slideMotor.runToPosition(SLIDE_LIFT_SCORING_IN_HIGH_BASKET, SLIDE_LIFT_VELOCITY)
+            } else if (currentGamepad1.dpad_down) {
+                slideMotor.runToPosition(SLIDE_LIFT_COLLAPSED, SLIDE_LIFT_VELOCITY)
+            } else if (currentGamepad1.guide) {
+                slideMotor.runToPosition(SLIDE_LIFT_LEVEL_ONE_ASCENT, SLIDE_LIFT_VELOCITY)
             }
 
             if (!slideMotor.isBusy && slideMotor.targetPosition <= 0) {
@@ -152,29 +177,29 @@ class MecanumTeleOp : LinearOpMode() {
 
             telemetry.addData("Slide motor target position", slideMotor.targetPosition)
             telemetry.addData("Slide motor current position", slideMotor.currentPosition)
-            telemetry.addData("Slide motor current", slideMotor.getCurrent(CurrentUnit.AMPS))
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
 
             // START SET ARM MOTOR MODE AND POWER
-            if (gamepad1.y) {
-                intakeArmMotor.runToPosition(INTAKE_ARM_END_POSITION, 800.0)
-            } else if (gamepad1.a) {
-                intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, 800.0)
+            if (currentGamepad1.triangle) {
+                intakeArmMotor.runToPosition(INTAKE_ARM_END_POSITION, INTAKE_ARM_VELOCITY)
+            } else if (currentGamepad1.cross) {
+                intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, INTAKE_ARM_VELOCITY)
+            } else if (currentGamepad1.touchpad) {
+                intakeArmMotor.runToPosition(
+                    INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION,
+                    INTAKE_ARM_VELOCITY
+                )
             }
             // END SET ARM MOTOR MODE AND POWER
 
             telemetry.addData("Intake arm motor target position", intakeArmMotor.targetPosition)
             telemetry.addData("Intake arm motor current position", intakeArmMotor.currentPosition)
-            telemetry.addData(
-                "Intake arm motor current",
-                intakeArmMotor.getCurrent(CurrentUnit.AMPS)
-            )
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
 
             // START SET BUCKET SERVO MOTOR POSITION
-            if (gamepad1.x) {
+            if (currentGamepad1.square) {
                 bucketServo.position = BUCKET_SERVO_END_POSITION
-            } else if (gamepad1.b) {
+            } else if (currentGamepad1.circle) {
                 bucketServo.position = BUCKET_SERVO_START_POSITION
             }
 
@@ -182,9 +207,9 @@ class MecanumTeleOp : LinearOpMode() {
             // END SET BUCKET SERVO MOTOR POSITION
 
             // START SET INTAKE SLIDE SERVO MOTOR POSITION
-            if (gamepad1.dpad_left) {
+            if (currentGamepad1.dpad_left) {
                 intakeSlideServo.position = INTAKE_SLIDE_SERVO_END_POSITION
-            } else if (gamepad1.dpad_right) {
+            } else if (currentGamepad1.dpad_right) {
                 intakeSlideServo.position = INTAKE_SLIDE_SERVO_START_POSITION
             }
 
@@ -192,18 +217,17 @@ class MecanumTeleOp : LinearOpMode() {
             // END SET INTAKE SLIDE SERVO MOTOR POSITION
 
             // START SET INTAKE SERVO POWER
-
-            if (gamepad1.left_bumper) {
+            if (currentGamepad1.left_bumper) {
                 intakeLeftServo.direction = Direction.FORWARD
                 intakeRightServo.direction = Direction.REVERSE
             }
 
-            if (gamepad1.right_bumper) {
+            if (currentGamepad1.right_bumper) {
                 intakeLeftServo.direction = Direction.REVERSE
                 intakeRightServo.direction = Direction.FORWARD
             }
 
-            val intakeServoPower = if (gamepad1.left_bumper || gamepad1.right_bumper) {
+            val intakeServoPower = if (currentGamepad1.left_bumper || currentGamepad1.right_bumper) {
                 1.0
             } else {
                 0.0
@@ -212,32 +236,26 @@ class MecanumTeleOp : LinearOpMode() {
             intakeRightServo.power = intakeServoPower
             // END SET INTAKE SERVO POWER
 
-
+            // START COLOR SENSOR
             // Get the normalized colors from the sensor
             val colors: NormalizedRGBA = colorSensor.normalizedColors
-
-            telemetry.addLine()
-                .addData("Red", "%.3f", colors.red)
-                .addData("Green", "%.3f", colors.green)
-                .addData("Blue", "%.3f", colors.blue)
-
             // Update the hsvValues array by passing it to Color.colorToHSV()
             Color.colorToHSV(colors.toColor(), hsvValues)
+            val hue = hsvValues[0].toInt()
+            val pattern = when (hue) {
+                in 20..30 -> RevBlinkinLedDriver.BlinkinPattern.RED
+                in 65..85 -> RevBlinkinLedDriver.BlinkinPattern.YELLOW
+                in 200..240 -> RevBlinkinLedDriver.BlinkinPattern.BLUE
+                else -> RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_OCEAN_PALETTE
+            }
+            blinkinLedDriver.setPattern(pattern)
+            // END COLOR SENSOR
 
             telemetry.addLine()
                 .addData("Hue", "%.3f", hsvValues[0])
                 .addData("Saturation", "%.3f", hsvValues[1])
                 .addData("Value", "%.3f", hsvValues[2])
             telemetry.addData("Alpha", "%.3f", colors.alpha)
-
-            val hue = hsvValues[0].toInt()
-            val pattern = when (hue) {
-                in 20..30 -> RevBlinkinLedDriver.BlinkinPattern.RED
-                in 60..85 -> RevBlinkinLedDriver.BlinkinPattern.YELLOW
-                in 200..240 -> RevBlinkinLedDriver.BlinkinPattern.BLUE
-                else -> RevBlinkinLedDriver.BlinkinPattern.COLOR_WAVES_OCEAN_PALETTE
-            }
-            blinkinLedDriver.setPattern(pattern)
 
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.update()
