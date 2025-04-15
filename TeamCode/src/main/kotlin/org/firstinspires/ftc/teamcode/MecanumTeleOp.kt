@@ -41,8 +41,8 @@ private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 976.0 * SLIDE_LIFT_TICKS_P
 private const val SLIDE_LIFT_VELOCITY = 2100.0
 
 private const val BUCKET_SERVO_INIT_POSITION = 0.0
-private const val BUCKET_SERVO_START_POSITION = 0.20
-private const val BUCKET_SERVO_END_POSITION = 0.50
+private const val BUCKET_SERVO_UP_POSITION = 0.20
+private const val BUCKET_SERVO_DOWN_POSITION = 0.50
 
 private const val INTAKE_SLIDE_SERVO_START_POSITION = 0.0
 private const val INTAKE_SLIDE_SERVO_END_POSITION = 0.28
@@ -57,6 +57,8 @@ class MecanumTeleOp : LinearOpMode() {
 
     // Instance of the "Robot" class.
     private val robot = BaseMecanumRobot(this)
+
+    private var bucketState: BucketState = BucketState.INIT
 
     private val slideMotor: DcMotorEx by lazy {
         hardwareMap.dcMotor.get(HARDWARE_MAP_SLIDE_MOTOR) as DcMotorEx
@@ -130,7 +132,8 @@ class MecanumTeleOp : LinearOpMode() {
         if (isStopRequested) return
 
         if (isStarted) {
-            bucketServo.position = BUCKET_SERVO_START_POSITION
+            bucketState = BucketState.UP
+            bucketServo.position = bucketState.position
             telemetry.addLine("Robot Started")
             telemetry.update()
         }
@@ -184,7 +187,7 @@ class MecanumTeleOp : LinearOpMode() {
                 intakeArmMotor.runToPosition(INTAKE_ARM_END_POSITION, INTAKE_ARM_VELOCITY)
             } else if (currentGamepad1.cross) {
                 intakeArmMotor.runToPosition(INTAKE_ARM_START_POSITION, INTAKE_ARM_VELOCITY)
-            } else if (currentGamepad1.touchpad) {
+            } else if (currentGamepad1.circle) {
                 intakeArmMotor.runToPosition(
                     INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION,
                     INTAKE_ARM_VELOCITY
@@ -197,10 +200,16 @@ class MecanumTeleOp : LinearOpMode() {
             // END GET CURRENT SLIDE STATE AND SET SLIDE MOTOR MODE AND POWER
 
             // START SET BUCKET SERVO MOTOR POSITION
-            if (currentGamepad1.square) {
-                bucketServo.position = BUCKET_SERVO_END_POSITION
-            } else if (currentGamepad1.circle) {
-                bucketServo.position = BUCKET_SERVO_START_POSITION
+            if (currentGamepad1.square && !previousGamepad1.square) {
+                // This will set intakeToggle to true if it was previously false
+                // and intakeToggle to false if it was previously true,
+                // providing a toggling behavior.
+                bucketState = when (bucketState) {
+                    BucketState.UP -> BucketState.DOWN
+                    else -> BucketState.UP
+                }
+                bucketServo.position = bucketState.position
+
             }
 
             telemetry.addData("Bucket Servo Position", bucketServo.position)
@@ -227,11 +236,12 @@ class MecanumTeleOp : LinearOpMode() {
                 intakeRightServo.direction = Direction.FORWARD
             }
 
-            val intakeServoPower = if (currentGamepad1.left_bumper || currentGamepad1.right_bumper) {
-                1.0
-            } else {
-                0.0
-            }
+            val intakeServoPower =
+                if (currentGamepad1.left_bumper || currentGamepad1.right_bumper) {
+                    1.0
+                } else {
+                    0.0
+                }
             intakeLeftServo.power = intakeServoPower
             intakeRightServo.power = intakeServoPower
             // END SET INTAKE SERVO POWER
@@ -260,5 +270,11 @@ class MecanumTeleOp : LinearOpMode() {
             // ADD TELEMETRY DATA AND UPDATE
             telemetry.update()
         }
+    }
+
+    enum class BucketState(val position: Double) {
+        INIT(BUCKET_SERVO_INIT_POSITION),
+        UP(BUCKET_SERVO_UP_POSITION),
+        DOWN(BUCKET_SERVO_DOWN_POSITION)
     }
 }
