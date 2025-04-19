@@ -23,10 +23,6 @@ private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val HARDWARE_MAP_BUCKET_SERVO_MOTOR = "bucketServo"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 
-private const val BUCKET_SERVO_INIT_POSITION = 0.0
-private const val BUCKET_SERVO_START_POSITION = 0.20
-private const val BUCKET_SERVO_END_POSITION = 0.50
-
 // Encoder Resolution for Viper Slide 223 RPM Motor = ((((1+(46/11))) * (1+(46/11))) * 28)
 // From https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-26-9-1-ratio-24mm-length-8mm-rex-shaft-223-rpm-3-3-5v-encoder/
 // Ticks Per Revolution = (Motor Encoder Resolution / Diameter Millimeters)
@@ -39,6 +35,10 @@ private const val SLIDE_LIFT_SCORING_IN_HIGH_BASKET = 976.0 * SLIDE_LIFT_TICKS_P
 
 private const val TELEMETRY_KEY_ROTATIONS = "Rotations"
 private const val TELEMETRY_KEY_SPEED = "Speed"
+
+private const val BUCKET_SERVO_INIT_POSITION = 0.0
+private const val BUCKET_SERVO_START_POSITION = 0.20
+private const val BUCKET_SERVO_END_POSITION = 0.50
 
 @Autonomous(name = "HIGH BASKET Autonomous", group = "Robot")
 class HighBasketMecanumAutonomous : LinearOpMode() {

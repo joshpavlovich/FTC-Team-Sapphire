@@ -12,8 +12,8 @@ fun DcMotorEx.initializeForRunToPosition(
     zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     this.direction = direction
     targetPosition = position.toInt()
-    mode = DcMotor.RunMode.RUN_TO_POSITION
     mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+    mode = DcMotor.RunMode.RUN_TO_POSITION
     if (setPowerToZero) {
         power = 0.0
     }

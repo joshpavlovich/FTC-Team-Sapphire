@@ -1,9 +1,10 @@
-package org.firstinspires.ftc.teamcode
+package org.firstinspires.ftc.teamcode.robot
 
+import androidx.annotation.CallSuper
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -17,7 +18,7 @@ private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val TELEMETRY_KEY_SPEED = "Speed"
 private const val TELEMETRY_KEY_Y_VALUE = "Axial Y Value"
 
-class BaseMecanumRobot(private val opmode: LinearOpMode) {
+open class BaseMecanumRobot(private val opmode: LinearOpMode) {
 
     // DECLARE OUR DRIVE MOTORS
     private lateinit var frontLeftMotor: DcMotor
@@ -32,10 +33,11 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
      * Use the hardware map to connect to devices.
      * Perform any set-up all the hardware devices.
      */
-    fun initialize() {
+    @CallSuper
+    open fun initialize() {
         // MAKE SURE YOUR ID'S MATCH YOUR CONFIGURATION
         frontLeftMotor = opmode.initializeDriveMotor(HARDWARE_MAP_FRONT_LEFT_MOTOR)
-        backLeftMotor = opmode.initializeDriveMotor(HARDWARE_MAP_BACK_LEFT_MOTOR, Direction.REVERSE)
+        backLeftMotor = opmode.initializeDriveMotor(HARDWARE_MAP_BACK_LEFT_MOTOR, DcMotorSimple.Direction.REVERSE)
         frontRightMotor = opmode.initializeDriveMotor(HARDWARE_MAP_FRONT_RIGHT_MOTOR)
         backRightMotor = opmode.initializeDriveMotor(HARDWARE_MAP_BACK_RIGHT_MOTOR)
     }
@@ -48,7 +50,13 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
      * @param powerMultiplier Multiplier to increase default speed (a.k.a, turbo) - Left-trigger
      * @param powerReducer Decrease default speed - Right-trigger
      */
-    fun move(axial: Double, lateral: Double, yaw: Double, powerMultiplier: Double = 0.0, powerReducer: Double = 0.0) {
+    fun drive(
+        axial: Double,
+        lateral: Double,
+        yaw: Double,
+        powerMultiplier: Double = 0.0,
+        powerReducer: Double = 0.0
+    ) {
         // Denominator is the largest motor power (absolute value) or 1
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
@@ -64,6 +72,7 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
                 val reducer = if (powerReducer > 0.8) 0.8 else powerReducer
                 DEFAULT_DRIVE_SPEED - ((1 - DEFAULT_DRIVE_SPEED) * reducer)
             }
+
             powerMultiplier > 0.0 -> DEFAULT_DRIVE_SPEED + ((1 - DEFAULT_DRIVE_SPEED) * powerMultiplier)
             else -> DEFAULT_DRIVE_SPEED
         }
@@ -88,7 +97,7 @@ class BaseMecanumRobot(private val opmode: LinearOpMode) {
 
     private fun OpMode.initializeDriveMotor(
         deviceName: String,
-        direction: Direction = Direction.FORWARD
+        direction: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD
     ): DcMotor = hardwareMap.dcMotor.get(deviceName).apply {
         this.direction = direction
         this.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
