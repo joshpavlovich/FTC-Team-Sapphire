@@ -2,9 +2,8 @@ package org.firstinspires.ftc.teamcode.robot
 
 import android.graphics.Color
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.CRServo
-import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor
@@ -22,10 +21,10 @@ private const val HARDWARE_MAP_INTAKE_LEFT_SERVO_MOTOR = "intakeLeftServo"
 private const val HARDWARE_MAP_INTAKE_RIGHT_SERVO_MOTOR = "intakeRightServo"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 
-private const val SLIDE_LIFT_VELOCITY = 2100.0
+private const val SLIDE_LIFT_VELOCITY = 2300.0
 private const val INTAKE_ARM_VELOCITY = 800.0
 
-class Robot(private val opmode: LinearOpMode) : BaseMecanumRobot(opmode) {
+class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
 
     private lateinit var bucketServo: Servo
     private lateinit var intakeArmMotor: DcMotorEx
@@ -70,18 +69,13 @@ class Robot(private val opmode: LinearOpMode) : BaseMecanumRobot(opmode) {
         )
 
         // Initialize the arm motor to zero
-        intakeArmMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
-        intakeArmMotor.direction = DcMotorSimple.Direction.FORWARD
-        intakeArmMotor.targetPosition = 0
-        intakeArmMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        intakeArmMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
-        intakeArmMotor.runToPosition(armState.position, INTAKE_ARM_VELOCITY)
+        intakeArmMotor.initializeForRunToPosition(
+            armState.position,
+            DcMotorSimple.Direction.FORWARD,
+        )
 
         intakeSlideServo.direction = Servo.Direction.REVERSE
-        intakeSlideServo.position = intakeSlideState.position
-
         bucketServo.direction = Servo.Direction.REVERSE
-        bucketServo.position = bucketState.position
     }
 
     fun isArmIntakeDown(): Boolean =
@@ -146,6 +140,7 @@ class Robot(private val opmode: LinearOpMode) : BaseMecanumRobot(opmode) {
         telemetry.addData("Intake arm motor current position", intakeArmMotor.currentPosition)
         telemetry.addData("Outtake Slide not busy", outtakeSlideMotor.isBusy)
         telemetry.addData("Outtake Slide power", outtakeSlideMotor.power)
+        telemetry.addData("Outtake Slide velocity", outtakeSlideMotor.velocity)
         telemetry.addData("Outtake Slide motor target position", outtakeSlideMotor.targetPosition)
         telemetry.addData("Outtake Slide motor current position", outtakeSlideMotor.currentPosition)
     }

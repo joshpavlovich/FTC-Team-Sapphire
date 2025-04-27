@@ -6,8 +6,8 @@ package org.firstinspires.ftc.teamcode.robot
 // Encoder Resolution Formula -> ((((1+(46/17))) * (1+(46/17))) * (1+(46/11)) * 28) = 1992.6
 private const val INTAKE_ARM_MOTOR_TICKS_PER_MM = (1992.6) / 96.0
 private const val INTAKE_ARM_TRANSFER_POSITION = 2.3 * INTAKE_ARM_MOTOR_TICKS_PER_MM
-private const val INTAKE_ARM_PICKUP_POSITION = 47.3 * INTAKE_ARM_MOTOR_TICKS_PER_MM
-private const val INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION = 31 * INTAKE_ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_PICKUP_POSITION = 47.4 * INTAKE_ARM_MOTOR_TICKS_PER_MM
+private const val INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION = 32 * INTAKE_ARM_MOTOR_TICKS_PER_MM
 
 sealed class ArmState(val position: Double) {
     data object Transfer : ArmState(INTAKE_ARM_TRANSFER_POSITION) // DEFAULT OR START STATE

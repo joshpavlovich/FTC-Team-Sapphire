@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.robot.Robot
 @TeleOp(name = "Team Sapphire: Mecanum TeleOp", group = "Robot")
 class MecanumTeleOp : LinearOpMode() {
 
-    // Instance of the "Robot" class.
+    // Instance of the "Robot" class
     private val robot = Robot(this)
 
     override fun runOpMode() {
@@ -31,6 +31,8 @@ class MecanumTeleOp : LinearOpMode() {
         if (isStopRequested) return
 
         if (isStarted) {
+            robot.moveIntakeSlideIn()
+            robot.moveArm(ArmState.Transfer)
             robot.moveBucket(BucketState.UP)
             telemetry.addLine("Robot Started")
             telemetry.update()

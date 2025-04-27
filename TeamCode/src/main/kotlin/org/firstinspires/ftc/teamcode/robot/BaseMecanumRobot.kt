@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot
 
 import androidx.annotation.CallSuper
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorSimple
@@ -18,7 +17,7 @@ private const val HARDWARE_MAP_BACK_RIGHT_MOTOR = "backRightMotor"
 private const val TELEMETRY_KEY_SPEED = "Speed"
 private const val TELEMETRY_KEY_Y_VALUE = "Axial Y Value"
 
-open class BaseMecanumRobot(private val opmode: LinearOpMode) {
+open class BaseMecanumRobot(private val opmode: OpMode) {
 
     // DECLARE OUR DRIVE MOTORS
     private lateinit var frontLeftMotor: DcMotor
@@ -37,7 +36,10 @@ open class BaseMecanumRobot(private val opmode: LinearOpMode) {
     open fun initialize() {
         // MAKE SURE YOUR ID'S MATCH YOUR CONFIGURATION
         frontLeftMotor = opmode.initializeDriveMotor(HARDWARE_MAP_FRONT_LEFT_MOTOR)
-        backLeftMotor = opmode.initializeDriveMotor(HARDWARE_MAP_BACK_LEFT_MOTOR, DcMotorSimple.Direction.REVERSE)
+        backLeftMotor = opmode.initializeDriveMotor(
+            HARDWARE_MAP_BACK_LEFT_MOTOR,
+            DcMotorSimple.Direction.REVERSE
+        )
         frontRightMotor = opmode.initializeDriveMotor(HARDWARE_MAP_FRONT_RIGHT_MOTOR)
         backRightMotor = opmode.initializeDriveMotor(HARDWARE_MAP_BACK_RIGHT_MOTOR)
     }
