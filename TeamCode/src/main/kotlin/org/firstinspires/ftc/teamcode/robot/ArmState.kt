@@ -9,9 +9,17 @@ private const val INTAKE_ARM_TRANSFER_POSITION = 2.3 * INTAKE_ARM_MOTOR_TICKS_PE
 private const val INTAKE_ARM_PICKUP_POSITION = 47.4 * INTAKE_ARM_MOTOR_TICKS_PER_MM
 private const val INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION = 32 * INTAKE_ARM_MOTOR_TICKS_PER_MM
 
-sealed class ArmState(val position: Double) {
-    data object Transfer : ArmState(INTAKE_ARM_TRANSFER_POSITION) // DEFAULT OR START STATE
-    data object LowChamberScoring : ArmState(INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION)
-    data object IntakePickup : ArmState(INTAKE_ARM_PICKUP_POSITION)
-    data class Moving(val currentPosition: Double) : ArmState(currentPosition)
+private const val RANGE_VARIANCE = 5
+
+sealed class ArmState(val position: Int) {
+    data object Transfer : ArmState(INTAKE_ARM_TRANSFER_POSITION.toInt()) // DEFAULT OR START STATE
+    data object LowChamberScoring : ArmState(INTAKE_ARM_LOW_CHAMBER_SCORING_POSITION.toInt())
+    data object IntakePickup : ArmState(INTAKE_ARM_PICKUP_POSITION.toInt())
+    data class Moving(val currentPosition: Int) : ArmState(currentPosition)
+
+    fun inRange(position: Int): Boolean {
+        val lowerBound = this.position - RANGE_VARIANCE
+        val upperBound = this.position + RANGE_VARIANCE
+        return (position in lowerBound..upperBound)
+    }
 }

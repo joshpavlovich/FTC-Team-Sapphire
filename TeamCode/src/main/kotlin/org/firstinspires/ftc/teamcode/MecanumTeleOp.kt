@@ -73,7 +73,6 @@ class MecanumTeleOp : LinearOpMode() {
             }
             // END MOVE OUTTAKE SLIDE
 
-
             // START MOVE ARM MOTOR
             if (currentGamepad1.triangle) {
                 robot.moveArm(ArmState.IntakePickup)
@@ -113,6 +112,12 @@ class MecanumTeleOp : LinearOpMode() {
 
             // UPDATE LED COLORS
             robot.updateLedColors()
+
+            // UPDATE ROBOT STATE
+            robot.update()
+
+            // PERFORM AUTOMATIONS
+            robot.performAutomations()
 
             // UPDATE TELEMETRY DATA
             robot.logTelemetryData()

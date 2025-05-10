@@ -6,9 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.qualcomm.robotcore.hardware.DistanceSensor
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor
 import com.qualcomm.robotcore.hardware.NormalizedRGBA
 import com.qualcomm.robotcore.hardware.Servo
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.extension.initializeForRunToPosition
 import org.firstinspires.ftc.teamcode.extension.runToPosition
 
@@ -23,6 +25,8 @@ private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 
 private const val SLIDE_LIFT_VELOCITY = 2300.0
 private const val INTAKE_ARM_VELOCITY = 800.0
+
+private const val SAMPLE_DETECTION_MIN_CENTIMETERS = 1.5
 
 class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
 
@@ -42,6 +46,8 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
     private var bucketState: BucketState = BucketState.INIT
     private var intakeSlideState: IntakeSlideState = IntakeSlideState.IN
     private var outtakeSlideState: OuttakeSlideState = OuttakeSlideState.Collapsed
+
+    private var samplePickedUp = false
 
     /**
      * Robot Initialization
@@ -70,7 +76,7 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
 
         // Initialize the arm motor to zero
         intakeArmMotor.initializeForRunToPosition(
-            armState.position,
+            armState.position.toDouble(),
             DcMotorSimple.Direction.FORWARD,
         )
 
@@ -82,8 +88,8 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         armState == ArmState.IntakePickup && intakeArmMotor.currentPosition > 900
 
     fun moveArm(state: ArmState) {
-        armState = state
-        intakeArmMotor.runToPosition(state.position, INTAKE_ARM_VELOCITY)
+        armState = ArmState.Moving(state.position)
+        intakeArmMotor.runToPosition(state.position.toDouble(), INTAKE_ARM_VELOCITY)
     }
 
     fun moveBucket() {
@@ -138,11 +144,13 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         telemetry.addData("Intake Slide Servo Position", intakeSlideServo.position)
         telemetry.addData("Intake arm motor target position", intakeArmMotor.targetPosition)
         telemetry.addData("Intake arm motor current position", intakeArmMotor.currentPosition)
+        telemetry.addData("ArmState", "${armState::class.simpleName}, ${armState.position}")
         telemetry.addData("Outtake Slide not busy", outtakeSlideMotor.isBusy)
         telemetry.addData("Outtake Slide power", outtakeSlideMotor.power)
-        telemetry.addData("Outtake Slide velocity", outtakeSlideMotor.velocity)
+//        telemetry.addData("Outtake Slide velocity", outtakeSlideMotor.velocity)
         telemetry.addData("Outtake Slide motor target position", outtakeSlideMotor.targetPosition)
         telemetry.addData("Outtake Slide motor current position", outtakeSlideMotor.currentPosition)
+        telemetry.addData("Sample Picked Up", samplePickedUp)
     }
 
     fun spinIntakeIn() {
@@ -187,10 +195,47 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         }
         blinkinLedDriver.setPattern(pattern)
 
-        telemetry.addLine()
-            .addData("Hue", "%.3f", hsvValues[0])
-            .addData("Saturation", "%.3f", hsvValues[1])
-            .addData("Value", "%.3f", hsvValues[2])
-            .addData("Alpha", "%.3f", colors.alpha)
+//        telemetry.addLine()
+//            .addData("Hue", "%.3f", hsvValues[0])
+//            .addData("Saturation", "%.3f", hsvValues[1])
+//            .addData("Value", "%.3f", hsvValues[2])
+//            .addData("Alpha", "%.3f", colors.alpha)
+
+        /* If this color sensor also has a distance sensor, display the measured distance.
+        * Note that the reported distance is only useful at very close range, and is impacted by
+        * ambient light and surface reflectivity. */
+        if (colorSensor is DistanceSensor) {
+            val distance = (colorSensor as DistanceSensor).getDistance(DistanceUnit.CM)
+            samplePickedUp = distance <= SAMPLE_DETECTION_MIN_CENTIMETERS
+            telemetry.addData(
+                "Distance (cm)",
+                "%.3f",
+                distance
+            )
+        }
+    }
+
+    fun performAutomations() {
+        if (armState == ArmState.IntakePickup && samplePickedUp) {
+            moveArm(ArmState.LowChamberScoring)
+        }
+
+        if (armState == ArmState.Transfer && samplePickedUp && intakeSlideState == IntakeSlideState.IN && outtakeSlideState == OuttakeSlideState.Collapsed) {
+            spinIntakeOut()
+        }
+    }
+
+    fun update() {
+        // Update the arm state based on the current position of the arm motor
+        val currentPosition = intakeArmMotor.currentPosition
+        if (armState is ArmState.Moving && armState.inRange(currentPosition)) {
+            val newArmState = when {
+                ArmState.Transfer.inRange(currentPosition) -> ArmState.Transfer
+                ArmState.LowChamberScoring.inRange(currentPosition) -> ArmState.LowChamberScoring
+                ArmState.IntakePickup.inRange(currentPosition) -> ArmState.IntakePickup
+                else -> armState
+            }
+            armState = newArmState
+        }
     }
 }

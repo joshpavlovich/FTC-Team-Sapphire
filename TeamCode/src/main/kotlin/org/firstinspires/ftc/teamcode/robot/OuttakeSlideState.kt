@@ -14,5 +14,5 @@ sealed class OuttakeSlideState(val position: Double) {
     data object Collapsed : OuttakeSlideState(SLIDE_LIFT_COLLAPSED)
     data object LevelOneAscent : OuttakeSlideState(SLIDE_LIFT_LEVEL_ONE_ASCENT)
     data object ScoringInHighBasket : OuttakeSlideState(SLIDE_LIFT_SCORING_IN_HIGH_BASKET)
-    data class Moving(val currentPosition: Double) : ArmState(currentPosition)
+    data class Moving(val currentPosition: Double) : OuttakeSlideState(currentPosition)
 }
