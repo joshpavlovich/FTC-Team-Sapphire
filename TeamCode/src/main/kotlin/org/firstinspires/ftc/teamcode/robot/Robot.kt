@@ -24,7 +24,7 @@ private const val HARDWARE_MAP_INTAKE_RIGHT_SERVO_MOTOR = "intakeRightServo"
 private const val HARDWARE_MAP_SLIDE_MOTOR = "slideMotor"
 
 private const val SLIDE_LIFT_VELOCITY = 2300.0
-private const val INTAKE_ARM_VELOCITY = 800.0
+private const val INTAKE_ARM_VELOCITY = 500.0
 
 private const val SAMPLE_DETECTION_MIN_CENTIMETERS = 1.5
 
@@ -48,6 +48,7 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
     private var outtakeSlideState: OuttakeSlideState = OuttakeSlideState.Collapsed
 
     private var samplePickedUp = false
+    private var atLeastOneSamplePickedUp = false
 
     /**
      * Robot Initialization
@@ -69,7 +70,7 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         outtakeSlideMotor = opmode.hardwareMap.dcMotor.get(HARDWARE_MAP_SLIDE_MOTOR) as DcMotorEx
 
         outtakeSlideMotor.initializeForRunToPosition(
-            outtakeSlideState.position,
+            outtakeSlideState.position.toDouble(),
             DcMotorSimple.Direction.REVERSE,
             true
         )
@@ -85,7 +86,7 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
     }
 
     fun isArmIntakeDown(): Boolean =
-        armState == ArmState.IntakePickup && intakeArmMotor.currentPosition > 900
+        armState == ArmState.IntakePickup && intakeArmMotor.currentPosition > 700
 
     fun moveArm(state: ArmState) {
         armState = ArmState.Moving(state.position)
@@ -119,8 +120,8 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
     }
 
     fun moveOuttakeSlide(state: OuttakeSlideState) {
-        outtakeSlideState = state
-        outtakeSlideMotor.runToPosition(state.position, SLIDE_LIFT_VELOCITY)
+        outtakeSlideState = OuttakeSlideState.Moving(state.position)
+        outtakeSlideMotor.runToPosition(state.position.toDouble(), SLIDE_LIFT_VELOCITY)
     }
 
     /**
@@ -132,7 +133,7 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         if (!outtakeSlideMotor.isBusy && (outtakeSlideMotor.targetPosition <= OuttakeSlideState.Collapsed.position || outtakeSlideState == OuttakeSlideState.Collapsed)) {
             telemetry.addData("Resetting outtake motor", outtakeSlideMotor.currentPosition)
             outtakeSlideMotor.initializeForRunToPosition(
-                OuttakeSlideState.Collapsed.position,
+                OuttakeSlideState.Collapsed.position.toDouble(),
                 DcMotorSimple.Direction.REVERSE,
                 true
             )
@@ -147,6 +148,10 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         telemetry.addData("ArmState", "${armState::class.simpleName}, ${armState.position}")
         telemetry.addData("Outtake Slide not busy", outtakeSlideMotor.isBusy)
         telemetry.addData("Outtake Slide power", outtakeSlideMotor.power)
+        telemetry.addData(
+            "OuttakeSlideState",
+            "${outtakeSlideState::class.simpleName}, ${outtakeSlideState.position}"
+        )
 //        telemetry.addData("Outtake Slide velocity", outtakeSlideMotor.velocity)
         telemetry.addData("Outtake Slide motor target position", outtakeSlideMotor.targetPosition)
         telemetry.addData("Outtake Slide motor current position", outtakeSlideMotor.currentPosition)
@@ -207,6 +212,9 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         if (colorSensor is DistanceSensor) {
             val distance = (colorSensor as DistanceSensor).getDistance(DistanceUnit.CM)
             samplePickedUp = distance <= SAMPLE_DETECTION_MIN_CENTIMETERS
+            if (samplePickedUp && !atLeastOneSamplePickedUp) {
+                atLeastOneSamplePickedUp = true
+            }
             telemetry.addData(
                 "Distance (cm)",
                 "%.3f",
@@ -216,26 +224,52 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
     }
 
     fun performAutomations() {
-        if (armState == ArmState.IntakePickup && samplePickedUp) {
-            moveArm(ArmState.LowChamberScoring)
+        if (armState == ArmState.IntakePickup) {
+            if (samplePickedUp) {
+                moveArm(ArmState.LowChamberScoring)
+            } else {
+                spinIntakeIn()
+            }
         }
 
-        if (armState == ArmState.Transfer && samplePickedUp && intakeSlideState == IntakeSlideState.IN && outtakeSlideState == OuttakeSlideState.Collapsed) {
+        if (atLeastOneSamplePickedUp &&
+            armState == ArmState.Transfer && samplePickedUp &&
+            intakeSlideState == IntakeSlideState.IN &&
+            outtakeSlideState == OuttakeSlideState.Collapsed
+        ) {
             spinIntakeOut()
         }
     }
 
     fun update() {
         // Update the arm state based on the current position of the arm motor
-        val currentPosition = intakeArmMotor.currentPosition
-        if (armState is ArmState.Moving && armState.inRange(currentPosition)) {
+        val armMotorCurrentPosition = intakeArmMotor.currentPosition
+        if (armState is ArmState.Moving && armState.inRange(armMotorCurrentPosition)) {
             val newArmState = when {
-                ArmState.Transfer.inRange(currentPosition) -> ArmState.Transfer
-                ArmState.LowChamberScoring.inRange(currentPosition) -> ArmState.LowChamberScoring
-                ArmState.IntakePickup.inRange(currentPosition) -> ArmState.IntakePickup
+                ArmState.Transfer.inRange(armMotorCurrentPosition) -> ArmState.Transfer
+                ArmState.LowChamberScoring.inRange(armMotorCurrentPosition) -> ArmState.LowChamberScoring
+                ArmState.IntakePickup.inRange(armMotorCurrentPosition) -> ArmState.IntakePickup
                 else -> armState
             }
             armState = newArmState
         }
+
+        // Update the outtake slide state based on the current position of the outtake slide motor
+        val outtakeMotorCurrentPosition = outtakeSlideMotor.currentPosition
+        if (outtakeSlideState is OuttakeSlideState.Moving && outtakeSlideState.inRange(
+                outtakeMotorCurrentPosition
+            )
+        ) {
+            val newOuttakeSlideState = when {
+                OuttakeSlideState.Collapsed.inRange(outtakeMotorCurrentPosition) -> OuttakeSlideState.Collapsed
+                OuttakeSlideState.LevelOneAscent.inRange(outtakeMotorCurrentPosition) -> OuttakeSlideState.LevelOneAscent
+                OuttakeSlideState.ScoringInHighBasket.inRange(outtakeMotorCurrentPosition) -> OuttakeSlideState.ScoringInHighBasket
+                else -> outtakeSlideState
+            }
+            outtakeSlideState = newOuttakeSlideState
+        }
     }
+
+    fun isOuttakeSlideInScoringInHighBasket(): Boolean =
+        outtakeSlideState == OuttakeSlideState.ScoringInHighBasket
 }
