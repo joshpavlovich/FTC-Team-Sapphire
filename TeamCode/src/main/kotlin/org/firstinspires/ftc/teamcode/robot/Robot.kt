@@ -270,6 +270,9 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         }
     }
 
+    fun isOuttakeSlideCollapsed(): Boolean =
+        outtakeSlideState == OuttakeSlideState.Collapsed
+
     fun isOuttakeSlideInScoringInHighBasket(): Boolean =
         outtakeSlideState == OuttakeSlideState.ScoringInHighBasket
 }
