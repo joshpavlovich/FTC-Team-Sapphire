@@ -30,8 +30,6 @@ class HighBasketToLevelOneAscentAutonomous : LinearOpMode() {
     }
 
     private lateinit var pathTimer: Timer
-    private lateinit var actionTimer: Timer
-    private lateinit var opmodeTimer: Timer
 
     /**
      * This is the variable where we store the state of our auto.
@@ -55,11 +53,11 @@ class HighBasketToLevelOneAscentAutonomous : LinearOpMode() {
     private val preScorePose = Pose(18.0, 128.0, Math.toRadians(315.0)) // Pre Scoring position
     private val scorePose = Pose(15.0, 132.0, Math.toRadians(315.0)) // Scoring position
 
-    private val parkControlPose0 = Pose(83.0, 108.0) // Control point 0 for curved path
-    private val parkControlPose1 = Pose(58.0, 98.0) // Control point 1 for curved path
-    private val parkControlPose2 = Pose(63.0, 102.0) // Control point 2 for curved path
-    private val parkControlPose3 = Pose(83.000, 112.539, Math.toRadians(90.0)) // Control point 3 for curved path
-    private val parkPose = Pose(83.0, 96.0, Math.toRadians(90.0)) // Parking position
+//    private val parkControlPose0 = Pose(83.0, 108.0) // Control point 0 for curved path
+//    private val parkControlPose1 = Pose(58.0, 98.0) // Control point 1 for curved path
+//    private val parkControlPose2 = Pose(63.0, 102.0) // Control point 2 for curved path
+//    private val parkControlPose3 = Pose(83.000, 112.539, Math.toRadians(90.0)) // Control point 3 for curved path
+//    private val parkPose = Pose(83.0, 96.0, Math.toRadians(90.0)) // Parking position
 
     private var preScorePreload: Path? = null
     private var scorePreload: Path? = null
@@ -81,10 +79,10 @@ class HighBasketToLevelOneAscentAutonomous : LinearOpMode() {
             .addPath(
                 BezierCurve(
                     Point(15.000, 132.000, Point.CARTESIAN),
-                    Point(50.000, 100.000, Point.CARTESIAN),
-                    Point(68.000, 113.000, Point.CARTESIAN),
-                    Point(83.000, 86.000, Point.CARTESIAN),
-                    Point(83.000, 112.539, Point.CARTESIAN)
+                    Point(24.000, 117.000, Point.CARTESIAN),
+                    Point(26.000, 122.000, Point.CARTESIAN),
+                    Point(61.000, 98.000, Point.CARTESIAN),
+                    Point(60.000, 117.000, Point.CARTESIAN)
                 )
             )
             .setTangentHeadingInterpolation()
@@ -94,8 +92,8 @@ class HighBasketToLevelOneAscentAutonomous : LinearOpMode() {
         park = follower.pathBuilder()
             .addPath(
                 BezierLine(
-                    Point(83.000, 112.539, Point.CARTESIAN),
-                    Point(83.000, 98.0, Point.CARTESIAN)
+                    Point(60.000, 117.000, Point.CARTESIAN),
+                    Point(60.000, 98.0, Point.CARTESIAN)
                 )
             )
             .setLinearHeadingInterpolation(Math.toRadians(90.0), Math.toRadians(90.0))
