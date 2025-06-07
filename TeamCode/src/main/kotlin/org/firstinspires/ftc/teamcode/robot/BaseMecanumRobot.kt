@@ -71,7 +71,7 @@ open class BaseMecanumRobot(private val opmode: OpMode) {
         // Limit speed to MaxPower
         val maxPower: Double = when {
             powerReducer > 0.0 -> {
-                val reducer = if (powerReducer > 0.8) 0.8 else powerReducer
+                val reducer = if (powerReducer > 0.8) 0.9 else powerReducer
                 DEFAULT_DRIVE_SPEED - ((1 - DEFAULT_DRIVE_SPEED) * reducer)
             }
 
