@@ -10,6 +10,7 @@ import com.pedropathing.pathgen.Point
 import com.pedropathing.util.Constants
 import com.pedropathing.util.Timer
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.robot.ArmState
 import org.firstinspires.ftc.teamcode.robot.BucketState
@@ -18,6 +19,7 @@ import org.firstinspires.ftc.teamcode.robot.Robot
 import pedroPathing.constants.FConstants
 import pedroPathing.constants.LConstants
 
+@Disabled
 @Autonomous(name = "High Basket Auto", group = "Robot")
 class HighBasketAutonomous : LinearOpMode() {
 
@@ -93,6 +95,8 @@ class HighBasketAutonomous : LinearOpMode() {
 
         prePickupSample1 = follower.pathBuilder()
             .addPath(BezierLine(Point(scorePose), Point(parkControlPose)))
+            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .addParametricCallback(.70) { robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent) }
             .setLinearHeadingInterpolation(scorePose.heading, parkControlPose.heading)
             .build()
 
@@ -179,14 +183,13 @@ class HighBasketAutonomous : LinearOpMode() {
             robot.performAutomations()
 
             // Use this to update the FtcDashboard field diagram with Pedro
-//            follower.telemetryDebug(telemetry)
-
-            // Use this to update the FtcDashboard field diagram with Pedro
             telemetry.addData("Path State", pathState)
             telemetry.addData("Position", follower.pose.toString())
             telemetry.addData("Path Timer Seconds", pathTimer.elapsedTimeSeconds)
 
             telemetry.update()
+            // Use this to update the FtcDashboard field diagram with Pedro
+            follower.telemetryDebug(telemetry)
         }
     }
 
