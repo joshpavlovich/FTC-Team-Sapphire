@@ -67,8 +67,8 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
                 BezierCurve(
                     Point(8.000, 56.000, Point.CARTESIAN),
                     Point(41.000, 27.000, Point.CARTESIAN),
-                    Point(71.500, 37.000, Point.CARTESIAN),
-                    Point(71.000, 23.000, Point.CARTESIAN)
+                    Point(70.000, 40.000, Point.CARTESIAN),
+                    Point(62.500, 23.000, Point.CARTESIAN)
                 )
             )
             .setLinearHeadingInterpolation(Math.toRadians(90.0), Math.toRadians(90.0))
@@ -77,7 +77,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
         pushSample1ToObservationZone = follower.pathBuilder()
             .addPath(
                 BezierLine(
-                    Point(71.000, 23.000, Point.CARTESIAN),
+                    Point(62.500, 23.000, Point.CARTESIAN),
                     Point(13.000, 23.000, Point.CARTESIAN)
                 )
             )
@@ -89,7 +89,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
                 BezierCurve(
                     Point(13.000, 23.000, Point.CARTESIAN),
                     Point(60.000, 37.000, Point.CARTESIAN),
-                    Point(71.500, 13.000, Point.CARTESIAN)
+                    Point(62.500, 13.000, Point.CARTESIAN)
                 )
             )
             .setLinearHeadingInterpolation(Math.toRadians(90.0), Math.toRadians(90.0))
@@ -98,7 +98,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
         pushSample2ToObservationZone = follower.pathBuilder()
             .addPath(
                 BezierLine(
-                    Point(71.500, 13.000, Point.CARTESIAN),
+                    Point(62.500, 13.000, Point.CARTESIAN),
                     Point(13.000, 13.000, Point.CARTESIAN)
                 )
             )
@@ -110,7 +110,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
                 BezierCurve(
                     Point(13.000, 13.000, Point.CARTESIAN),
                     Point(60.000, 19.000, Point.CARTESIAN),
-                    Point(71.500, 8.500, Point.CARTESIAN)
+                    Point(62.500, 9.000, Point.CARTESIAN)
                 )
             )
             .setLinearHeadingInterpolation(Math.toRadians(90.0), Math.toRadians(90.0))
@@ -119,8 +119,8 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
         pushSample3ToObservationZone = follower.pathBuilder()
             .addPath(
                 BezierLine(
-                    Point(71.500, 8.500, Point.CARTESIAN),
-                    Point(12.000, 8.500, Point.CARTESIAN)
+                    Point(62.500, 9.000, Point.CARTESIAN),
+                    Point(13.000, 9.000, Point.CARTESIAN)
                 )
             )
             .setLinearHeadingInterpolation(Math.toRadians(90.0), Math.toRadians(90.0))
@@ -129,7 +129,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
         preEndGameParkObservationZone = follower.pathBuilder()
             .addPath(
                 BezierLine(
-                    Point(12.000, 8.500, Point.CARTESIAN),
+                    Point(13.000, 9.000, Point.CARTESIAN),
                     Point(32.000, 15.000, Point.CARTESIAN)
                 )
             )
