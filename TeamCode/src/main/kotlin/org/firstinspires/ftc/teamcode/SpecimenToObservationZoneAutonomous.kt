@@ -34,7 +34,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
      * It is used by the pathUpdate method.
      */
     enum class PathState {
-        START_WITH_PRELOAD,
+        START,
         PRE_PUSH_SAMPLE_1,
         PUSH_SAMPLE_1_TO_OBSERVATION_ZONE,
         PRE_PUSH_SAMPLE_2,
@@ -45,7 +45,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
         END_GAME_PARK_OBSERVATION_ZONE
     }
 
-    private var pathState = PathState.START_WITH_PRELOAD
+    private var pathState = PathState.START
         set(value) {
             field = value
             pathTimer.resetTimer()
@@ -211,7 +211,7 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
                 - Check Robot States: (ArmState, BucketState, IntakeSlideState, OuttakeSlideState)
                 */
 
-            PathState.START_WITH_PRELOAD -> {
+            PathState.START -> {
                 follower.followPath(prePushSample1)
                 pathState = PathState.PRE_PUSH_SAMPLE_1
             }
