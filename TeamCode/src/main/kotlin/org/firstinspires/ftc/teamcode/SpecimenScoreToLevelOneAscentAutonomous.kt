@@ -12,12 +12,13 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.robot.ArmState
 import org.firstinspires.ftc.teamcode.robot.BucketState
+import org.firstinspires.ftc.teamcode.robot.OuttakeSlideState
 import org.firstinspires.ftc.teamcode.robot.Robot
 import pedroPathing.constants.FConstants
 import pedroPathing.constants.LConstants
 
-@Autonomous(name = "Specimen To Observation Zone Auto", group = "Robot")
-class SpecimenToObservationZoneAutonomous : LinearOpMode() {
+@Autonomous(name = "Specimen Score To Level One Ascent Auto", group = "Robot")
+class SpecimenScoreToLevelOneAscentAutonomous : LinearOpMode() {
 
     // Instance of the "Robot" class
     private val robot = Robot(this)
@@ -34,39 +35,70 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
      * It is used by the pathUpdate method.
      */
     enum class PathState {
-        START,
+        START_WITH_PRELOAD,
+        PRE_SCORE_SPECIMEN,
+        SCORE_SPECIMEN,
         PRE_PUSH_SAMPLE_1,
         PUSH_SAMPLE_1_TO_OBSERVATION_ZONE,
         PRE_PUSH_SAMPLE_2,
         PUSH_SAMPLE_2_TO_OBSERVATION_ZONE,
         PRE_PUSH_SAMPLE_3,
         PUSH_SAMPLE_3_TO_OBSERVATION_ZONE,
-        PRE_END_GAME_PARK_OBSERVATION_ZONE,
-        END_GAME_PARK_OBSERVATION_ZONE
+        PRE_END_GAME_LEVEL_ONE_ASCENT,
+        END_GAME_LEVEL_ONE_ASCENT
     }
 
-    private var pathState = PathState.START
+    private var pathState = PathState.START_WITH_PRELOAD
         set(value) {
             field = value
             pathTimer.resetTimer()
         }
 
-    private val startPose = Pose(8.0, 56.0, Math.toRadians(90.0)) // Starting position
+    private val startPose = Pose(9.0, 63.0) // Starting position
+    private var preScoreSpecimen: PathChain? = null
+    private var scoreSpecimen: PathChain? = null
     private var prePushSample1: PathChain? = null
     private var pushSample1ToObservationZone: PathChain? = null
     private var prePushSample2: PathChain? = null
     private var pushSample2ToObservationZone: PathChain? = null
     private var prePushSample3: PathChain? = null
     private var pushSample3ToObservationZone: PathChain? = null
-    private var preEndGameParkObservationZone: PathChain? = null
-    private var endGameParkObservationZone: PathChain? = null
+    private var preEndGameParkLevelOneAscent: PathChain? = null
+    private var endGameParkLevelOneAscent: PathChain? = null
 
     fun buildPaths() {
+        preScoreSpecimen = follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    Point(9.000, 63.000, Point.CARTESIAN),
+                    Point(28.000, 63.000, Point.CARTESIAN)
+                )
+            )
+            .addParametricCallback(.25) { robot.spinIntakeIn() }
+            .addParametricCallback(.80) { robot.moveArm(ArmState.LowChamberScoring)  }
+            .setLinearHeadingInterpolation(Math.toRadians(0.0), Math.toRadians(0.0))
+            .build()
+
+        scoreSpecimen = follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    Point(24.000, 63.000, Point.CARTESIAN),
+                    Point(13.000, 63.000, Point.CARTESIAN)
+                )
+            )
+            .addParametricCallback(.50) {
+                robot.stopSpinningIntake()
+                robot.moveArm(ArmState.Transfer)
+            }
+            .setTangentHeadingInterpolation()
+            .setReversed(true)
+            .build()
+
         prePushSample1 = follower.pathBuilder()
             .addPath(
                 BezierCurve(
-                    Point(8.000, 56.000, Point.CARTESIAN),
-                    Point(41.000, 27.000, Point.CARTESIAN),
+                    Point(9.000, 63.000, Point.CARTESIAN),
+                    Point(30.000, 26.000, Point.CARTESIAN),
                     Point(70.000, 40.000, Point.CARTESIAN),
                     Point(62.500, 23.000, Point.CARTESIAN)
                 )
@@ -126,24 +158,24 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
             .setLinearHeadingInterpolation(Math.toRadians(90.0), Math.toRadians(90.0))
             .build()
 
-        preEndGameParkObservationZone = follower.pathBuilder()
+        preEndGameParkLevelOneAscent = follower.pathBuilder()
             .addPath(
                 BezierLine(
                     Point(13.000, 9.000, Point.CARTESIAN),
-                    Point(32.000, 15.000, Point.CARTESIAN)
+                    Point(60.000, 34.000, Point.CARTESIAN)
                 )
             )
-            .setLinearHeadingInterpolation(Math.toRadians(360.0), Math.toRadians(360.0))
+            .setLinearHeadingInterpolation(Math.toRadians(315.0), Math.toRadians(270.0))
             .build()
 
-        endGameParkObservationZone = follower.pathBuilder()
+        endGameParkLevelOneAscent = follower.pathBuilder()
             .addPath(
                 BezierLine(
-                    Point(32.000, 15.000, Point.CARTESIAN),
-                    Point(12.000, 15.000, Point.CARTESIAN)
+                    Point(60.000, 34.000, Point.CARTESIAN),
+                    Point(60.000, 46.500, Point.CARTESIAN)
                 )
             )
-            .setLinearHeadingInterpolation(Math.toRadians(360.0), Math.toRadians(360.0))
+            .setLinearHeadingInterpolation(Math.toRadians(270.0), Math.toRadians(270.0))
             .setReversed(true)
             .build()
     }
@@ -211,7 +243,18 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
                 - Check Robot States: (ArmState, BucketState, IntakeSlideState, OuttakeSlideState)
                 */
 
-            PathState.START -> {
+            PathState.START_WITH_PRELOAD -> {
+                follower.followPath(preScoreSpecimen, true)
+                pathState = PathState.PRE_SCORE_SPECIMEN
+            }
+
+            PathState.PRE_SCORE_SPECIMEN -> if (!follower.isBusy) {
+                robot.moveArm(ArmState.IntakePickup)
+                follower.followPath(scoreSpecimen)
+                pathState = PathState.SCORE_SPECIMEN
+            }
+
+            PathState.SCORE_SPECIMEN -> if (!follower.isBusy) {
                 follower.followPath(prePushSample1)
                 pathState = PathState.PRE_PUSH_SAMPLE_1
             }
@@ -242,16 +285,17 @@ class SpecimenToObservationZoneAutonomous : LinearOpMode() {
             }
 
             PathState.PUSH_SAMPLE_3_TO_OBSERVATION_ZONE -> if (!follower.isBusy) {
-                follower.followPath(preEndGameParkObservationZone)
-                pathState = PathState.PRE_END_GAME_PARK_OBSERVATION_ZONE
+                follower.followPath(preEndGameParkLevelOneAscent)
+                pathState = PathState.PRE_END_GAME_LEVEL_ONE_ASCENT
             }
 
-            PathState.PRE_END_GAME_PARK_OBSERVATION_ZONE -> if (!follower.isBusy) {
-                follower.followPath(endGameParkObservationZone, true)
-                pathState = PathState.END_GAME_PARK_OBSERVATION_ZONE
+            PathState.PRE_END_GAME_LEVEL_ONE_ASCENT -> if (!follower.isBusy) {
+                follower.followPath(endGameParkLevelOneAscent, true)
+                robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent)
+                pathState = PathState.END_GAME_LEVEL_ONE_ASCENT
             }
 
-            PathState.END_GAME_PARK_OBSERVATION_ZONE -> Unit
+            PathState.END_GAME_LEVEL_ONE_ASCENT -> Unit
         }
     }
 }
