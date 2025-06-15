@@ -270,6 +270,12 @@ class Robot(private val opmode: OpMode) : BaseMecanumRobot(opmode) {
         }
     }
 
+    fun isBucketDown(): Boolean = bucketState == BucketState.DOWN
+
+    fun isBucketUp(): Boolean = bucketState == BucketState.UP
+
+    fun isArmInTransfer(): Boolean = armState == ArmState.Transfer
+
     fun isOuttakeSlideCollapsed(): Boolean =
         outtakeSlideState == OuttakeSlideState.Collapsed
 
