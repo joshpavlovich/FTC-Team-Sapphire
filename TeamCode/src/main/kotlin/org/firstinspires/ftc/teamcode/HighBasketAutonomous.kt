@@ -10,7 +10,6 @@ import com.pedropathing.pathgen.Point
 import com.pedropathing.util.Constants
 import com.pedropathing.util.Timer
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.robot.ArmState
 import org.firstinspires.ftc.teamcode.robot.BucketState
@@ -19,7 +18,6 @@ import org.firstinspires.ftc.teamcode.robot.Robot
 import pedroPathing.constants.FConstants
 import pedroPathing.constants.LConstants
 
-@Disabled
 @Autonomous(name = "High Basket Auto", group = "Robot")
 class HighBasketAutonomous : LinearOpMode() {
 
@@ -32,8 +30,6 @@ class HighBasketAutonomous : LinearOpMode() {
     }
 
     private lateinit var pathTimer: Timer
-    private lateinit var actionTimer: Timer
-    private lateinit var opmodeTimer: Timer
 
     /**
      * This is the variable where we store the state of our auto.
@@ -43,13 +39,16 @@ class HighBasketAutonomous : LinearOpMode() {
         START_WITH_PRELOAD,
         PRE_SCORE_PRELOAD,
         SCORE_PRELOAD,
-        PRE_PICKUP_SAMPLE_1,
         PICKUP_SAMPLE_1,
+        PRE_SCORE_SAMPLE_1,
         SCORE_SAMPLE_1,
         PICKUP_SAMPLE_2,
+        PRE_SCORE_SAMPLE_2,
         SCORE_SAMPLE_2,
         PICKUP_SAMPLE_3,
         SCORE_SAMPLE_3,
+        PRE_SCORE_SAMPLE_3,
+        PRE_END_GAME_LEVEL_ONE_ASCENT,
         END_GAME_LEVEL_ONE_ASCENT
     }
 
@@ -59,29 +58,24 @@ class HighBasketAutonomous : LinearOpMode() {
             pathTimer.resetTimer()
         }
 
-    private val startPose = Pose(9.0, 111.0, Math.toRadians(270.0)) // Starting position
-    private val preScorePose = Pose(18.0, 128.0, Math.toRadians(315.0)) // Pre Scoring position
-    private val scorePose = Pose(15.0, 132.0, Math.toRadians(315.0)) // Scoring position
+    private val startPose = Pose(9.000, 111.000, Math.toRadians(270.0)) // Starting position
+    private val preScorePose = Pose(18.000, 128.000, Math.toRadians(315.0)) // Pre Scoring position
+    private val scorePose = Pose(15.000, 132.000, Math.toRadians(315.0)) // Scoring position
 
-    private val preSample1Pose = Pose(15.0, 132.0, Math.toRadians(0.0)) // Pre First sample Sample
-    private val sample1Pose = Pose(18.0, 132.0, Math.toRadians(0.0)) // First sample Sample
-    private val sample2Pose = Pose(43.0, 130.0, Math.toRadians(0.0)) // Second sample Sample
-    private val sample3Pose = Pose(49.0, 135.0, Math.toRadians(0.0)) // Third sample Sample
-
-    private val parkPose = Pose(60.0, 98.0, Math.toRadians(90.0)) // Parking position
-    private val parkControlPose =
-        Pose(85.0, 98.0, Math.toRadians(90.0)) // Control point for curved path
+    private val sample1Pose = Pose(21.50, 133.50, Math.toRadians(0.0)) // First sample Sample
+    private val sample2Pose = Pose(25.500, 124.500, Math.toRadians(0.0)) // Second sample Sample
+    private val sample3Pose = Pose(25.000, 133.000, Math.toRadians(0.0)) // Third sample Sample
 
     private var preScorePreload: Path? = null
-    private var scorePreload: Path? = null
-    private var park: Path? = null
-    private var prePickupSample1: PathChain? = null
+    private var scorePreload: PathChain? = null
     private var pickupSample1: PathChain? = null
     private var pickupSample2: PathChain? = null
     private var pickupSample3: PathChain? = null
-    private var scoreSample1: PathChain? = null
-    private var scoreSample2: PathChain? = null
-    private var scoreSample3: PathChain? = null
+    private var preScoreSample1: PathChain? = null
+    private var preScoreSample2: PathChain? = null
+    private var preScoreSample3: PathChain? = null
+    private var prePark: PathChain? = null
+    private var park: PathChain? = null
 
     fun buildPaths() {
         // Path for scoring preload
@@ -89,53 +83,104 @@ class HighBasketAutonomous : LinearOpMode() {
             setLinearHeadingInterpolation(startPose.heading, preScorePose.heading)
         }
 
-        scorePreload = Path(BezierLine(Point(preScorePose), Point(scorePose))).apply {
-            setLinearHeadingInterpolation(preScorePose.heading, scorePose.heading)
-        }
-
-        prePickupSample1 = follower.pathBuilder()
-            .addPath(BezierLine(Point(scorePose), Point(parkControlPose)))
-            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
-            .addParametricCallback(.70) { robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent) }
-            .setLinearHeadingInterpolation(scorePose.heading, parkControlPose.heading)
+        scorePreload = follower.pathBuilder()
+            .addPath(BezierLine(Point(preScorePose), Point(scorePose)))
+            .setLinearHeadingInterpolation(preScorePose.heading, scorePose.heading)
             .build()
 
-        // Path chains for picking up and scoring samples
         pickupSample1 = follower.pathBuilder()
-            .addPath(BezierLine(Point(preSample1Pose), Point(sample1Pose)))
-            .setLinearHeadingInterpolation(preSample1Pose.heading, sample1Pose.heading)
+            .addPath(
+                BezierLine(
+                    Point(scorePose),
+                    Point(sample1Pose)
+                )
+            )
+            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .addParametricCallback(.6) { robot.moveIntakeSlideOut() }
+//            .addParametricCallback(.99) { robot.moveIntakeSlideIn() }
+            .setLinearHeadingInterpolation(scorePose.heading, sample1Pose.heading)
             .build()
 
-        scoreSample1 = follower.pathBuilder()
-            .addPath(BezierLine(Point(sample1Pose), Point(scorePose)))
-//            .addParametricCallback(.25) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
-            .setLinearHeadingInterpolation(sample1Pose.heading, scorePose.heading)
+        preScoreSample1 = follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    Point(sample1Pose),
+                    Point(preScorePose)
+                )
+            )
+            .addParametricCallback(.25) { robot.moveOuttakeSlide(OuttakeSlideState.ScoringInHighBasket) }
+            .setLinearHeadingInterpolation(sample1Pose.heading, preScorePose.heading)
             .build()
 
         pickupSample2 = follower.pathBuilder()
-            .addPath(BezierLine(Point(scorePose), Point(sample2Pose)))
+            .addPath(
+                BezierLine(
+                    Point(scorePose),
+                    Point(sample2Pose)
+                )
+            )
+            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .addParametricCallback(.85) { robot.moveIntakeSlideOut() }
+            .addParametricCallback(.99) { robot.moveIntakeSlideIn() }
             .setLinearHeadingInterpolation(scorePose.heading, sample2Pose.heading)
             .build()
 
-        scoreSample2 = follower.pathBuilder()
-            .addPath(BezierLine(Point(sample2Pose), Point(scorePose)))
-            .setLinearHeadingInterpolation(sample2Pose.heading, scorePose.heading)
+        preScoreSample2 = follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    Point(sample2Pose),
+                    Point(preScorePose)
+                )
+            )
+            .addParametricCallback(.25) { robot.moveOuttakeSlide(OuttakeSlideState.ScoringInHighBasket) }
+            .setLinearHeadingInterpolation(sample2Pose.heading, preScorePose.heading)
             .build()
 
         pickupSample3 = follower.pathBuilder()
-            .addPath(BezierLine(Point(scorePose), Point(sample3Pose)))
+            .addPath(
+                BezierLine(
+                    Point(scorePose),
+                    Point(sample3Pose)
+                )
+            )
+            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
             .setLinearHeadingInterpolation(scorePose.heading, sample3Pose.heading)
             .build()
 
-        scoreSample3 = follower.pathBuilder()
-            .addPath(BezierLine(Point(sample3Pose), Point(scorePose)))
-            .setLinearHeadingInterpolation(sample3Pose.heading, scorePose.heading)
+        preScoreSample3 = follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    Point(sample3Pose),
+                    Point(preScorePose)
+                )
+            )
+            .setLinearHeadingInterpolation(sample3Pose.heading, preScorePose.heading)
             .build()
 
         // Curved path for parking
-        park = Path(BezierCurve(Point(scorePose), Point(parkControlPose), Point(parkPose))).apply {
-            setLinearHeadingInterpolation(scorePose.heading, parkPose.heading)
-        }
+        prePark = follower.pathBuilder()
+            .addPath(
+                BezierCurve(
+                    Point(15.000, 132.000, Point.CARTESIAN),
+                    Point(24.000, 117.000, Point.CARTESIAN),
+                    Point(26.000, 122.000, Point.CARTESIAN),
+                    Point(61.000, 98.000, Point.CARTESIAN),
+                    Point(60.000, 117.000, Point.CARTESIAN)
+                )
+            )
+            .setTangentHeadingInterpolation()
+            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .build()
+
+        park = follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    Point(60.000, 117.000, Point.CARTESIAN),
+                    Point(60.000, 98.0, Point.CARTESIAN)
+                )
+            )
+            .setLinearHeadingInterpolation(Math.toRadians(90.0), Math.toRadians(90.0))
+            .build()
     }
 
     override fun runOpMode() {
@@ -177,8 +222,6 @@ class HighBasketAutonomous : LinearOpMode() {
             // UPDATE ROBOT STATE
             robot.update()
 
-            // ADD AUTO SPIN INTAKE WHEN ARM IS PICKUP STATE
-
             // PERFORM AUTOMATIONS
             robot.performAutomations()
 
@@ -188,6 +231,7 @@ class HighBasketAutonomous : LinearOpMode() {
             telemetry.addData("Path Timer Seconds", pathTimer.elapsedTimeSeconds)
 
             telemetry.update()
+
             // Use this to update the FtcDashboard field diagram with Pedro
             follower.telemetryDebug(telemetry)
         }
@@ -203,8 +247,8 @@ class HighBasketAutonomous : LinearOpMode() {
                 */
 
             PathState.START_WITH_PRELOAD -> {
-                robot.moveOuttakeSlide(OuttakeSlideState.ScoringInHighBasket)
                 /* Start Pose to Score Preload */
+                robot.moveOuttakeSlide(OuttakeSlideState.ScoringInHighBasket)
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 follower.followPath(preScorePreload)
@@ -221,93 +265,123 @@ class HighBasketAutonomous : LinearOpMode() {
             }
             /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
             PathState.SCORE_PRELOAD -> if (!follower.isBusy) {
-                robot.moveBucket(BucketState.DOWN)
+                if (robot.isBucketUp()) robot.moveBucket(BucketState.DOWN)
                 /* Score Preload to Pickup Sample 1 */
 
+                if (pathTimer.elapsedTimeSeconds > 1) {
+                    robot.moveArm(ArmState.IntakePickup)
+                }
                 /* Since this is a pathChain, we can have Pedro hold the end point while we are picking up the sample */
-                if (pathTimer.elapsedTimeSeconds > 2.5) {
-                    follower.followPath(prePickupSample1, true)
-                    pathState = PathState.PRE_PICKUP_SAMPLE_1
-                    robot.moveBucket(BucketState.UP)
-//                    robot.moveArm(ArmState.IntakePickup)
+                if (pathTimer.elapsedTimeSeconds > 2.75) {
+                    follower.followPath(pickupSample1, true)
+                    pathState = PathState.PICKUP_SAMPLE_1
+                    if (robot.isBucketDown()) robot.moveBucket(BucketState.UP)
                 }
             }
 
-//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-            PathState.PRE_PICKUP_SAMPLE_1 -> if (!follower.isBusy) {
-                robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent)
-//                /* Pick Sample 1 to Score Sample 1 */
-
-//                robot.moveIntakeSlideOut()
-//                /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-//                follower.followPath(pickupSample1, true)
-//                pathState = PathState.PICKUP_SAMPLE_1
-            }
-
-//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
             PathState.PICKUP_SAMPLE_1 -> if (!follower.isBusy) {
-//                if (pathTimer.elapsedTimeSeconds >= 2.5) {
-//                    robot.moveOuttakeSlide(OuttakeSlideState.Collapsed)
-//                }
-//                /* Pick Sample 1 to Score Sample 1 */
-//
-//                /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-//                follower.followPath(scoreSample1, true)
-//                pathState = PathState.SCORE_SAMPLE_1
+                robot.moveIntakeSlideIn()
+                if (robot.isArmInTransfer() && pathTimer.elapsedTimeSeconds > 2.0) {
+                    robot.spinIntakeOut()
+                    if (pathTimer.elapsedTimeSeconds > 3.0) {
+                        follower.followPath(preScoreSample1, true)
+                        pathState = PathState.PRE_SCORE_SAMPLE_1
+                    }
+                } else if (robot.isOuttakeSlideCollapsed()) {
+                    robot.moveArm(ArmState.Transfer)
+                }
             }
 
-//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-//            PathState.SCORE_SAMPLE_1 -> if (!follower.isBusy) {
-//                /* Score Sample 1 to Pickup Sample 2 */
+            PathState.PRE_SCORE_SAMPLE_1 -> if (!follower.isBusy && robot.isOuttakeSlideInScoringInHighBasket()) {
+                robot.stopSpinningIntake()
+                follower.followPath(scorePreload, true)
+                pathState = PathState.SCORE_SAMPLE_1
+            }
+
+            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+            PathState.SCORE_SAMPLE_1 -> if (!follower.isBusy) {
+                if (robot.isBucketUp()) robot.moveBucket(BucketState.DOWN)
+
+                if (pathTimer.elapsedTimeSeconds > 1) {
+                    robot.moveArm(ArmState.IntakePickup)
+                }
+                /* Since this is a pathChain, we can have Pedro hold the end point while we are picking up the sample */
+                if (pathTimer.elapsedTimeSeconds > 2.75) {
+                    follower.followPath(pickupSample2, true)
+                    pathState = PathState.PICKUP_SAMPLE_2
+                    if (robot.isBucketDown()) robot.moveBucket(BucketState.UP)
+                }
+            }
+
+            PathState.PICKUP_SAMPLE_2 -> if (!follower.isBusy && robot.isOuttakeSlideCollapsed()) {
+                if (robot.isArmInTransfer() && pathTimer.elapsedTimeSeconds > 2.0) {
+                    robot.spinIntakeOut()
+                    if (pathTimer.elapsedTimeSeconds > 3.0) {
+                        follower.followPath(preScoreSample2, true)
+                        pathState = PathState.PRE_SCORE_SAMPLE_2
+                    }
+                } else {
+                    robot.moveArm(ArmState.Transfer)
+                }
+            }
+
+            PathState.PRE_SCORE_SAMPLE_2 -> if (!follower.isBusy && robot.isOuttakeSlideInScoringInHighBasket()) {
+                robot.stopSpinningIntake()
+                follower.followPath(scorePreload, true)
+                pathState = PathState.SCORE_SAMPLE_2
+            }
+
+            PathState.SCORE_SAMPLE_2 -> if (!follower.isBusy) {
+                if (robot.isBucketUp()) robot.moveBucket(BucketState.DOWN)
+
+                /* Since this is a pathChain, we can have Pedro hold the end point while we are picking up the sample */
+                if (pathTimer.elapsedTimeSeconds > 2.25) {
+                    follower.followPath(pickupSample3, true)
+                    pathState = PathState.PICKUP_SAMPLE_3
+                    if (robot.isBucketDown()) robot.moveBucket(BucketState.UP)
+                }
+            }
+
+            else -> Unit
 //
-//                /* Since this is a pathChain, we can have Pedro hold the end point while we are picking up the sample */
-//                follower.followPath(pickupSample2, true)
-//                pathState = PathState.PICKUP_SAMPLE_2
-//            }
-//
-//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
-//            PathState.PICKUP_SAMPLE_2 -> if (!follower.isBusy) {
-//                /* Pick Sample 1 to Score Sample 2 */
-//
-//                /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-//                follower.followPath(scoreSample2, true)
-//                pathState = PathState.SCORE_SAMPLE_2
-//            }
-//
-//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-//            PathState.SCORE_SAMPLE_2 -> if (!follower.isBusy) {
-//                /* Score Sample 2 to Pickup Sample 3 */
-//
-//                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-//                follower.followPath(pickupSample3, true)
-//                pathState = PathState.PICKUP_SAMPLE_3
-//            }
-//
-//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
 //            PathState.PICKUP_SAMPLE_3 -> if (!follower.isBusy) {
-//                /* Pick Sample 3 to Score Sample 2 */
+//                if (robot.isArmInTransfer()) {
+//                    robot.performAutomations() // TODO: Spin out picked up sample???
+//                    robot.moveOuttakeSlide(OuttakeSlideState.ScoringInHighBasket)
+//                    follower.followPath(preScoreSample3, true)
+//                    pathState = PathState.PRE_SCORE_SAMPLE_3
+//                } else {
+//                    robot.moveArm(ArmState.Transfer)
+//                }
+//            }
 //
-//                /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-//                follower.followPath(scoreSample2, true)
+//            PathState.PRE_SCORE_SAMPLE_3 -> if (!follower.isBusy && robot.isOuttakeSlideInScoringInHighBasket()) {
+//                follower.followPath(scorePreload, true)
 //                pathState = PathState.SCORE_SAMPLE_3
 //            }
 //
 //            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
 //            PathState.SCORE_SAMPLE_3 -> if (!follower.isBusy) {
+//                robot.moveBucket(BucketState.DOWN)
+//
+//                /* Since this is a pathChain, we can have Pedro hold the end point while we are picking up the sample */
+//                if (pathTimer.elapsedTimeSeconds > 2.5) {
+//                    follower.followPath(prePark, true)
+//                    pathState = PathState.PRE_END_GAME_LEVEL_ONE_ASCENT
+//                    robot.moveBucket(BucketState.UP)
+//                }
+//            }
+//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+//            PathState.PRE_END_GAME_LEVEL_ONE_ASCENT -> if (!follower.isBusy && robot.isOuttakeSlideCollapsed()) {
 //                /* Score Sample 3 to End Game  */
 //
 //                /* Since this is a pathChain, we can have Pedro hold the end point while we are parked */
 //                follower.followPath(park, true)
+//                robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent)
 //                pathState = PathState.END_GAME_LEVEL_ONE_ASCENT
 //            }
 //
-//            PathState.END_GAME_LEVEL_ONE_ASCENT -> if (!follower.isBusy) {
-//                /* Level 1 Ascent */
-//.               robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent)
-//                /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-//                follower.pose = parkPose // IS THIS CORRECT???
-//            }
-            else -> {}
+//            PathState.END_GAME_LEVEL_ONE_ASCENT -> Unit
         }
     }
 }
