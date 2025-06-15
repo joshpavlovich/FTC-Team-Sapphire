@@ -18,6 +18,7 @@ import pedroPathing.constants.FConstants
 import pedroPathing.constants.LConstants
 
 @Autonomous(name = "Specimen Score To Observation Zone Auto", group = "Robot")
+@Disabled
 class SpecimenScoreToObservationZoneAutonomous : LinearOpMode() {
 
     // Instance of the "Robot" class
