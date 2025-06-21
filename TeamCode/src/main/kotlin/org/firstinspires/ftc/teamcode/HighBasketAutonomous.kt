@@ -92,12 +92,11 @@ class HighBasketAutonomous : LinearOpMode() {
             .addPath(
                 BezierLine(
                     Point(scorePose),
-                    Point(sample1Pose)
+                    Point(sample3Pose)
                 )
             )
-            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
-            .addParametricCallback(.6) { robot.moveIntakeSlideOut() }
-//            .addParametricCallback(.99) { robot.moveIntakeSlideIn() }
+            .addParametricCallback(.50) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .addParametricCallback(.8) { robot.moveIntakeSlideOut() }
             .setLinearHeadingInterpolation(scorePose.heading, sample1Pose.heading)
             .build()
 
@@ -119,7 +118,7 @@ class HighBasketAutonomous : LinearOpMode() {
                     Point(sample2Pose)
                 )
             )
-            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .addParametricCallback(.50) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
             .addParametricCallback(.85) { robot.moveIntakeSlideOut() }
             .addParametricCallback(.99) { robot.moveIntakeSlideIn() }
             .setLinearHeadingInterpolation(scorePose.heading, sample2Pose.heading)
@@ -143,7 +142,7 @@ class HighBasketAutonomous : LinearOpMode() {
                     Point(sample3Pose)
                 )
             )
-            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .addParametricCallback(.50) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
             .setLinearHeadingInterpolation(scorePose.heading, sample3Pose.heading)
             .build()
 
@@ -169,7 +168,7 @@ class HighBasketAutonomous : LinearOpMode() {
                 )
             )
             .setTangentHeadingInterpolation()
-            .addParametricCallback(.10) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
+            .addParametricCallback(.40) { robot.moveOuttakeSlide(OuttakeSlideState.Collapsed) }
             .build()
 
         park = follower.pathBuilder()
@@ -336,13 +335,12 @@ class HighBasketAutonomous : LinearOpMode() {
 
                 /* Since this is a pathChain, we can have Pedro hold the end point while we are picking up the sample */
                 if (pathTimer.elapsedTimeSeconds > 2.25) {
-                    follower.followPath(pickupSample3, true)
-                    pathState = PathState.PICKUP_SAMPLE_3
+                    follower.followPath(prePark, true)
+                    pathState = PathState.PRE_END_GAME_LEVEL_ONE_ASCENT
                     if (robot.isBucketDown()) robot.moveBucket(BucketState.UP)
                 }
             }
 
-            else -> Unit
 //
 //            PathState.PICKUP_SAMPLE_3 -> if (!follower.isBusy) {
 //                if (robot.isArmInTransfer()) {
@@ -371,17 +369,19 @@ class HighBasketAutonomous : LinearOpMode() {
 //                    robot.moveBucket(BucketState.UP)
 //                }
 //            }
-//            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-//            PathState.PRE_END_GAME_LEVEL_ONE_ASCENT -> if (!follower.isBusy && robot.isOuttakeSlideCollapsed()) {
-//                /* Score Sample 3 to End Game  */
-//
-//                /* Since this is a pathChain, we can have Pedro hold the end point while we are parked */
-//                follower.followPath(park, true)
-//                robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent)
-//                pathState = PathState.END_GAME_LEVEL_ONE_ASCENT
-//            }
-//
-//            PathState.END_GAME_LEVEL_ONE_ASCENT -> Unit
+            /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+            PathState.PRE_END_GAME_LEVEL_ONE_ASCENT -> if (!follower.isBusy && robot.isOuttakeSlideCollapsed()) {
+                /* Score Sample 3 to End Game  */
+
+                /* Since this is a pathChain, we can have Pedro hold the end point while we are parked */
+                follower.followPath(park, true)
+                robot.moveOuttakeSlide(OuttakeSlideState.LevelOneAscent)
+                pathState = PathState.END_GAME_LEVEL_ONE_ASCENT
+            }
+
+            PathState.END_GAME_LEVEL_ONE_ASCENT -> Unit
+
+            else -> Unit
         }
     }
 }
