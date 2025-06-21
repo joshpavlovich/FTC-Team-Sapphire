@@ -9,6 +9,7 @@ import com.pedropathing.pathgen.Point
 import com.pedropathing.util.Constants
 import com.pedropathing.util.Timer
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.robot.ArmState
 import org.firstinspires.ftc.teamcode.robot.BucketState
@@ -18,6 +19,7 @@ import pedroPathing.constants.FConstants
 import pedroPathing.constants.LConstants
 
 @Autonomous(name = "Specimen Score To Level One Ascent Auto", group = "Robot")
+@Disabled
 class SpecimenScoreToLevelOneAscentAutonomous : LinearOpMode() {
 
     // Instance of the "Robot" class
@@ -172,7 +174,7 @@ class SpecimenScoreToLevelOneAscentAutonomous : LinearOpMode() {
             .addPath(
                 BezierLine(
                     Point(60.000, 34.000, Point.CARTESIAN),
-                    Point(60.000, 46.500, Point.CARTESIAN)
+                    Point(60.000, 48.0, Point.CARTESIAN)
                 )
             )
             .setLinearHeadingInterpolation(Math.toRadians(270.0), Math.toRadians(270.0))
