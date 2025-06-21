@@ -9,7 +9,6 @@ import com.pedropathing.pathgen.Point
 import com.pedropathing.util.Constants
 import com.pedropathing.util.Timer
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import org.firstinspires.ftc.teamcode.robot.ArmState
 import org.firstinspires.ftc.teamcode.robot.BucketState
@@ -18,7 +17,6 @@ import pedroPathing.constants.FConstants
 import pedroPathing.constants.LConstants
 
 @Autonomous(name = "Specimen Score To Observation Zone Auto", group = "Robot")
-@Disabled
 class SpecimenScoreToObservationZoneAutonomous : LinearOpMode() {
 
     // Instance of the "Robot" class
@@ -75,8 +73,8 @@ class SpecimenScoreToObservationZoneAutonomous : LinearOpMode() {
                     Point(28.000, 63.000, Point.CARTESIAN)
                 )
             )
-            .addParametricCallback(.25) { robot.spinIntakeIn()  }
-            .addParametricCallback(.80) { robot.moveArm(ArmState.LowChamberScoring)  }
+            .addParametricCallback(.25) { robot.spinIntakeIn() }
+            .addParametricCallback(.80) { robot.moveArm(ArmState.LowChamberScoring) }
             .setLinearHeadingInterpolation(Math.toRadians(0.0), Math.toRadians(0.0))
             .build()
 
